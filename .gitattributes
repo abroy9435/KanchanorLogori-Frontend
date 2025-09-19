@@ -1,0 +1,10 @@
+# Always store LF in the repo; convert to native on checkout if needed
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.mp3 binary
