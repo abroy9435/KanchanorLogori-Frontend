@@ -1,0 +1,16 @@
+{
+    "name": "Kanchanor Logori",
+    "short_name": "KL Dating",
+    "start_url": "/?source=pwa",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#0D0002",
+    "theme_color": "#FF5069",
+    "icons": [
+      { "src": "/datingapp_icon.png", "sizes": "192x192", "type": "image/png" },
+      { "src": "/datingapp_icon.png", "sizes": "512x512", "type": "image/png" },
+      { "src": "/datingapp_icon.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+      { "src": "/datingapp_icon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+  }
+  
