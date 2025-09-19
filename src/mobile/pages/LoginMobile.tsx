@@ -102,44 +102,45 @@ export default function Login() {
     setErr(null);
     setLoading(true);
     try {
+      // ensure chooser even if we already have a Firebase session
+      try { await signOut(auth); } catch {}
+  
       const provider = new GoogleAuthProvider();
-      // This is only a *hint* to Google — enforcement is done below
-      provider.setCustomParameters({ hd: "tezu.ac.in" });
-
+      provider.setCustomParameters({
+        prompt: 'select_account',   // <-- force account picker
+        // prompt: 'consent select_account', // (optional) also show consent each time
+        hd: 'tezu.ac.in',           // hint the domain (not enforcement)
+      });
+  
       const result = await signInWithPopup(auth, provider);
-
+  
       // 1) Email domain check
-      const email = result.user.email ?? "";
-
+      const email = result.user.email ?? '';
+  
       // 2) Also check Google ID token's `hd` claim when present
       let hd: string | undefined;
       const cred = GoogleAuthProvider.credentialFromResult(result);
       if (cred?.idToken) {
         try {
           const payload = decodeJwtPayload(cred.idToken);
-          hd = typeof payload?.hd === "string" ? payload.hd : undefined;
-        } catch {
-          // ignore decode errors; email check still enforces
-        }
+          hd = typeof payload?.hd === 'string' ? payload.hd : undefined;
+        } catch { /* ignore */ }
       }
-
-      const passes =
-        isTezuEmail(email) && (hd ? hd.toLowerCase() === "tezu.ac.in" : true);
-
+  
+      const passes = isTezuEmail(email) && (hd ? hd.toLowerCase() === 'tezu.ac.in' : true);
       if (!passes) {
-        // Immediately revoke the session and show an error
         await signOut(auth);
-        throw new Error("Please sign in with your @tezu.ac.in Google account.");
+        throw new Error('Please sign in with your @tezu.ac.in Google account.');
       }
-
-      // OK → continue
-      window.location.href = "/gate";
+  
+      window.location.href = '/gate';
     } catch (error: any) {
-      setErr(error?.message || "Login failed");
+      setErr(error?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="bg-gradient-to-t from-[#1F0004] to-black min-h-screen flex flex-col justify-between px-6 py-8">
