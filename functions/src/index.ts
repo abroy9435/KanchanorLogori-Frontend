@@ -71,7 +71,6 @@ import {
 } from "firebase-functions/v2/identity";
 import type { Request, Response } from "express";
 
-// --- Admin init & options ---
 initializeApp();
 setGlobalOptions({ maxInstances: 10 /*, region: "asia-south1" */ });
 
@@ -99,9 +98,7 @@ export const allowTezuOnCreate = beforeUserCreated((event) => {
 export const allowTezuOnSignIn = beforeUserSignedIn((event) => {
   const data = event.data;
   if (!data) throw new HttpsError("invalid-argument", "Missing auth event data.");
-
   assertAllowedEmail(data.email);
-
   if (!data.emailVerified) {
     throw new HttpsError("failed-precondition", "Verify your university email first.");
   }
@@ -112,23 +109,40 @@ export const allowTezuOnSignIn = beforeUserSignedIn((event) => {
 // CORS helper for HTTPS endpoints
 // ---------------------------
 
+const EXTRA_ORIGINS = (process.env.ALLOWED_EXTRA_ORIGINS || "")
+  .split(",")
+  .map(s => s.trim())
+  .filter(Boolean);
+
+function isAllowedOrigin(origin: string): boolean {
+  if (!origin) return false;
+
+  // Local dev
+  if (origin === "http://localhost:5173") return true;
+
+  // Prod pages root
+  if (origin === "https://kanchanorlogori-tu-dating.pages.dev") return true;
+
+  // Preview pages: https://<branch>.<project>.pages.dev
+  if (/^https:\/\/[\w-]+\.kanchanorlogori-tu-dating\.pages\.dev$/.test(origin)) return true;
+
+  // Any extra/custom domains via env
+  if (EXTRA_ORIGINS.includes(origin)) return true;
+
+  return false;
+}
+
 function applyCors(req: Request, res: Response): boolean {
   const origin = (req.headers.origin as string) || "";
 
-  const previewPattern = /^https:\/\/[\w-]+\.kanchanorlogori-tu-dating\.pages\.dev$/;
-
-  const isAllowed =
-    origin === "http://localhost:5173" ||
-    origin === "https://kanchanorlogori-tu-dating.pages.dev" ||
-    previewPattern.test(origin);
-
-  if (isAllowed) {
+  if (isAllowedOrigin(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
     res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
+      // include common headers some mobile browsers/extensions add
+      "Content-Type, Authorization, X-Requested-With, Accept, Origin, Referer"
     );
     res.setHeader(
       "Access-Control-Allow-Methods",
@@ -136,7 +150,7 @@ function applyCors(req: Request, res: Response): boolean {
     );
   }
 
-  // Handle preflight
+  // Handle preflight quickly
   if (req.method === "OPTIONS") {
     res.status(204).send("");
     return true;
@@ -152,8 +166,7 @@ const withCors =
   };
 
 // ---------------------------
-// Example HTTPS endpoints
-// (Replace with your real endpoints that the app calls)
+// Example HTTPS endpoints (swap for your real ones)
 // ---------------------------
 
 export const ping = onRequest({ cors: false }, withCors(async (_req, res) => {
