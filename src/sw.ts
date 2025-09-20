@@ -82,10 +82,8 @@ declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST?: any };
 self.skipWaiting();
 clientsClaim();
 
-// Precache build assets + ensure offline.html is available offline
-precacheAndRoute(
-  (self.__WB_MANIFEST || []).concat([{ url: '/offline.html', revision: null }])
-);
+// ✅ Precache only what's in __WB_MANIFEST (offline.html is already there)
+precacheAndRoute(self.__WB_MANIFEST || []);
 cleanupOutdatedCaches();
 
 // Optional: enable navigation preload for faster first paint
@@ -129,6 +127,7 @@ try {
     const data  = payload.data || {};
     self.registration.showNotification(title, {
       body,
+      // make sure this path exists in /public; if not, switch to '/datingapp_icon.png'
       icon: '/icons/icon-192x192.png',
       data,
     });
