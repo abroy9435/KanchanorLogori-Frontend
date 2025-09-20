@@ -143,28 +143,28 @@ export default function Login() {
   
 
   return (
-    <div className="bg-gradient-to-t from-[#1F0004] to-black min-h-screen flex flex-col justify-between px-6 py-8">
+    <div className="bg-gradient-to-t from-[#1F0004] to-black min-h-screen max-w-screen flex flex-col justify-between px-[rem] py-8">
       {/* Top content */}
       <div className="flex flex-col items-center">
         <img src="/loginpage_art.png" alt="Login Illustration" className="w-40 mb-4" />
-        <div className="text-center mb-6">
+        <div className="text-center mb-[2rem]">
           <h1 className="text-[#FF5069] font-semibold text-lg">
             Ready to meet someone special?
           </h1>
-          <p className="text-gray-300 text-sm mt-2">
+          <p className="text-gray-300 text-sm mt-[1rem] mx-[1rem]">
             Continue with your University GSuite ID. Your partner is a few clicks away!
           </p>
         </div>
       </div>
 
       {/* Bottom button */}
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-[18rem] mx-auto">
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="flex items-center justify-center gap-3 text-[#FF5069] w-full py-[20px] rounded-full shadow-lg bg-[#000000] border-[#FF5069] transition"
+          className="flex items-center justify-center gap-3 text-[#FF5069] w-full py-[20px] rounded-full mb-[4rem] shadow-lg bg-[#000000] border-[#FF5069] transition"
         >
-          <img src="/google_icon.png" alt="Google logo" className="w-6 h-[40px] object-contain" />
+          <img src="/google_icon.png" alt="Google logo" className="mr-[0.8rem] h-[2rem] object-contain" />
           {loading ? "Signing in..." : "Sign in with Google"}
         </button>
         {err && <p className="text-red-400 text-sm mt-3">{err}</p>}
