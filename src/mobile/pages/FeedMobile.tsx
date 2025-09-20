@@ -318,7 +318,7 @@ export default function FeedMobile() {
             <div className="relative -mt-[1.2rem] ">
               <div className="bg-[#0D0002] rounded-t-[1.5rem] px-[1rem] pt-[1.1rem] ">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-[1.5rem] mx-[1rem] font-bold leading-tight">{profile.name}</h2>
+                  <h2 className="text-[1.1rem] mx-[1rem] font-bold leading-tight">{profile.name}</h2>
                   <LikeButton liked={profile.has_liked} onToggle={() => handleLike(profile.uid)} />
                 </div>
               </div>
