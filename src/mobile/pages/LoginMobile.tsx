@@ -148,10 +148,10 @@ export default function Login() {
       <div className="flex flex-col items-center">
         <img src="/loginpage_art.png" alt="Login Illustration" className="w-40 mb-4" />
         <div className="text-center mb-[2rem]">
-          <h1 className="text-[#FF5069] font-semibold text-lg">
+          <h1 className="text-[#FF5069] text-[1.8rem]">
             Ready to meet someone special?
           </h1>
-          <p className="text-gray-300 text-sm mt-[1rem] mx-[1rem]">
+          <p className="text-gray-300 text-sm mt-[3rem] mx-[1rem]">
             Continue with your University GSuite ID. Your partner is a few clicks away!
           </p>
         </div>
@@ -162,7 +162,7 @@ export default function Login() {
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="flex items-center justify-center gap-3 text-[#FF5069] w-full py-[20px] rounded-full mb-[4rem] shadow-lg bg-[#000000] border-[#FF5069] transition"
+          className="flex items-center justify-center gap-3 text-[#FF5069] w-full py-[20px] rounded-full mb-[7rem] shadow-lg bg-[#000000] border-[#FF5069] transition"
         >
           <img src="/google_icon.png" alt="Google logo" className="mr-[0.8rem] h-[2rem] object-contain" />
           {loading ? "Signing in..." : "Sign in with Google"}

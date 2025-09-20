@@ -167,6 +167,9 @@ import type {
 
 import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
 
+
+import type { AxiosRequestTransformer } from "axios";
+
 // --------------------
 // Axios instance
 // --------------------
@@ -175,6 +178,7 @@ const api = axios.create({
   timeout: 20000, // 20s safety
   // DO NOT set default Content-Type; axios will set per request
 });
+
 
 // Ensure FormData isn't converted or given a JSON content-type
 delete api.defaults.headers.post?.["Content-Type"];
@@ -277,6 +281,25 @@ export async function uploadAvatar(file: File): Promise<{ avatar_url?: string; m
 }
 
 export default api;
+
+
+// keep axios defaults
+const defaultTransforms = axios.defaults.transformRequest as AxiosRequestTransformer[];
+
+// add a tiny pre-transform that just removes Content-Type for FormData
+api.defaults.transformRequest = [
+  (data: any, headers?: any) => {
+    if (typeof FormData !== "undefined" && data instanceof FormData) {
+      if (headers) {
+        delete headers["Content-Type"];
+        delete headers["content-type"];
+      }
+    }
+    return data; // let the next transforms handle it
+  },
+  ...defaultTransforms, // ✅ this brings back JSON serialization
+];
+
 
 // --------------------
 // REPORT (unchanged)

@@ -271,7 +271,7 @@ export default function UserProfileMobile() {
         <div className="relative w-full aspect-[0.8] overflow-hidden rounded-t-[1.25rem]">
           <Link
             to="/settings"
-            className="absolute top-[8px] left-[5px] bg-[#82817c]/50 p-[0.5rem] rounded-full z-[5]"
+            className="absolute top-[8px] left-[5px] bg-[#82817c]/50 px-[0.5rem] pt-[0.5rem] pb-[0.3rem] rounded-full z-[5]"
           >
             <Settings className="h-5 w-5 text-white" />
           </Link>
@@ -291,7 +291,7 @@ export default function UserProfileMobile() {
 
           <label
             htmlFor="avatar-upload"
-            className="absolute top-[8px] right-[0.75rem] cursor-pointer bg-[#82817c]/50 p-[0.5rem] rounded-full z-[5]"
+            className="absolute top-[8px] right-[0.75rem] cursor-pointer bg-[#82817c]/50 px-[0.5rem] pt-[0.5rem] pb-[0.3rem] rounded-full z-[5]"
           >
             <Upload className="h-5 w-5 text-white" />
           </label>
@@ -318,13 +318,13 @@ export default function UserProfileMobile() {
         </div>
 
         <div className="relative -mt-[1.2rem]">
-          <div className="bg-[#0D0002] rounded-t-[1.5rem] px-[1rem] pt-[1.1rem] pb-[0.6rem]">
+          <div className="bg-[#0D0002] rounded-t-[1.5rem] px-[1rem] pt-[1.1rem]">
             <div className="flex items-center justify-between">
-              <h2 className="text-[1.8rem] mx-[1rem] font-bold leading-tight">
+              <h2 className="text-[1.5rem] mx-[1rem] font-bold leading-tight">
                 {profile.name}
               </h2>
               <button
-                className="flex items-center justify-center border-none p-[0.5rem] mr-[0.75rem] text-white rounded-full"
+                className="flex items-center justify-center border-none p-[0.5rem] mr-[0.75rem] bg-[#413839] text-white rounded-full"
                 onClick={() => navigate("/edit-profile", { state: { profile } })}
                 aria-label="Edit profile"
               >
@@ -336,7 +336,7 @@ export default function UserProfileMobile() {
       </div>
 
       {/* details */}
-      <div className="bg-[#0D0002] w-full px-[0.5rem] pt-[0.6rem] pb-[1.25rem]">
+      <div className="bg-[#0D0002] w-full px-[0.5rem] pb-[1.25rem]">
         <p className="text-[0.95rem] mx-[1rem] text-white/70">
           {profile.dateOfBirth ? calculateAge(profile.dateOfBirth) : "N/A"}{" "}
           {profile.gender}, {profile.personality}
