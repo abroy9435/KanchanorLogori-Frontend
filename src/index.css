@@ -7,9 +7,12 @@
   line-height: 1.5;
   font-weight: 300;
   font-size: large;
-  color-scheme: light dark;
+
+  /* Force dark pipeline to avoid OS light mode overrides */
+  color-scheme: dark;
+
   color: rgba(255, 255, 255, 0.87);
-  background-color: black;
+  background-color: #0d0002;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -37,7 +40,7 @@ body {
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: 2.2em;
   line-height: 1.1;
 }
 
@@ -60,7 +63,7 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 } */
 
-@media (prefers-color-scheme: light) {
+/* @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
@@ -71,4 +74,22 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+} */
+
+/* put this near the bottom of index.css */
+
+/* Kill iOS/Safari native button styles & blue text */
+button,
+[type="button"],
+[type="submit"],
+[type="reset"],
+[role="button"] {
+  -webkit-appearance: none;
+  appearance: none;
+  color: inherit;          /* use your theme color */
+  background: transparent; /* you style via Tailwind/classes */
+  border: none;            /* optional: remove native border */
 }
+
+/* Remove tap highlight on iOS */
+a, button { -webkit-tap-highlight-color: transparent; }

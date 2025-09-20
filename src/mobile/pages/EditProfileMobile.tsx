@@ -10,7 +10,7 @@ import { INTERESTS } from "../../shared/constants/interests";
 import { useToast } from "../../shared/components/Toast";
 import { ArrowLeft } from "lucide-react";
 import { createLucideIcon } from "lucide-react";
-
+import { makeUpdateFormData } from "../../shared/utils/makeUpdateFormData";
 // ---- FeedMobile-style dash icon (same as your Feed page)
 export const DashWide = createLucideIcon("DashWide", [
   ["line", { x1: "2", y1: "12", x2: "22", y2: "12", key: "line" }],
@@ -173,32 +173,59 @@ export default function EditProfileMobile() {
     if (programmeId !== baseIds.programme_id) body.programme_id = programmeId;
     if (departmentId !== baseIds.department_id) body.department_id = departmentId;
 
-    return body;
+    const jsonText = JSON.stringify(body, null, 2); // pretty JSON with quoted keys
+    return jsonText;
   };
 
   const canSubmit = useMemo(() => {
     const changes = buildChanges();
+    console.log(changes)
     return Object.keys(changes).length > 0 && !saving;
   }, [gender, dateOfBirth, interests, personality, lookingFor, bio, schoolId, programmeId, departmentId, saving, base, baseIds]);
 
+  // const onSave = async () => {
+  //   const changes = buildChanges();
+  //   if (Object.keys(changes).length === 0) {
+  //     push({ message: "Nothing to update.", variant: "info" });
+  //     return;
+  //   }
+  //   setSaving(true);
+  //   try {
+  //     console.log(changes)
+  //     await api.put("/user/profile/update", {"update_json":changes});
+  //     push({ message: "Profile updated successfully!", variant: "success" });
+  //     navigate(-1);
+  //   } catch (e: any) {
+  //     console.error(e);
+  //     push({ message: e?.response?.data?.message || e?.message || "Update failed", variant: "error" });
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
+
+
   const onSave = async () => {
-    const changes = buildChanges();
-    if (Object.keys(changes).length === 0) {
+    const changes = buildChanges() as Record<string, any>;
+    if (!changes || (typeof changes === "object" && Object.keys(changes).length === 0)) {
       push({ message: "Nothing to update.", variant: "info" });
       return;
     }
+  
+    const fd = makeUpdateFormData(changes);
+  
     setSaving(true);
     try {
-      await api.put("/user/profile/update", changes);
+      await api.put("/user/profile/update", fd); // don't set Content-Type yourself
       push({ message: "Profile updated successfully!", variant: "success" });
       navigate(-1);
     } catch (e: any) {
-      console.error(e);
+      console.error("PUT /user/profile/update failed:", e?.response?.status, e?.response?.data || e?.message);
       push({ message: e?.response?.data?.message || e?.message || "Update failed", variant: "error" });
     } finally {
       setSaving(false);
     }
   };
+  
 
   if (loading) {
     return (

@@ -18,6 +18,8 @@ import {
   LogOut,
 } from "lucide-react";
 
+import { clearApiCaches } from '../../shared/api';
+
 
 //--------------------------------------------------
 // Add Notification enable/disable button using this
@@ -102,6 +104,7 @@ export default function SettingsMobile() {
         source: "pwa",
       });
       await signOut(auth);
+      await clearApiCaches();
       navigate("/", { replace: true });
     } catch (err) {
       console.error("Deactivate failed:", err);
@@ -113,6 +116,7 @@ export default function SettingsMobile() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      await clearApiCaches();
       navigate("/", { replace: true });
     } catch (err) {
       console.error("Logout failed:", err);

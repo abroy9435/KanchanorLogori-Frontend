@@ -21,6 +21,9 @@ import Portal from "../../shared/components/portal";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { createLucideIcon } from "lucide-react";
 
+// ✅ add uploadAvatar (same helper you use on Profile page)
+import { uploadAvatar } from "../../shared/api";
+
 // ------------ icons (converted from the Android VectorDrawable you shared) ------------
 const MaleIcon = ({ active }: { active?: boolean }) => (
   <svg width="96" height="96" viewBox="0 0 24 24" aria-hidden>
@@ -138,6 +141,8 @@ type OptionItem = { id: number; name: string };
 
 // ------------ DOB Wheel (simple scroll “picker”) ------------
 const ITEM_H = 40;
+const VIEW_H = 200;                                // matches className h-[200px]
+const CENTER_OFFSET = (VIEW_H - ITEM_H) / 2;       // 80px center band
 
 function Wheel({
   options,
@@ -150,22 +155,27 @@ function Wheel({
   onChange: (v: string | number) => void;
   ariaLabel: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = React.useRef<HTMLDivElement>(null);
 
-  // only scroll to selected if there IS a selected value
-  useEffect(() => {
-    if (value == null) return;
-    const idx = options.findIndex((o) => String(o) === String(value));
-    if (idx >= 0 && ref.current) {
-      ref.current.scrollTo({ top: idx * ITEM_H - ITEM_H, behavior: "smooth" });
+  // Scroll the selected item under the center band
+  React.useEffect(() => {
+    if (value == null || !ref.current) return;
+    const idx = options.findIndex(o => String(o) === String(value));
+    if (idx >= 0) {
+      const top = Math.max(0, idx * ITEM_H - CENTER_OFFSET);
+      ref.current.scrollTo({ top, behavior: "smooth" });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, options]);
 
-  const onScroll = useCallback(() => {
+  // Pick the item currently under the center band
+  const onScroll = React.useCallback(() => {
     if (!ref.current) return;
-    // pick on user scroll
-    const idx = clamp(Math.round(ref.current.scrollTop / ITEM_H), 0, options.length - 1);
+    const top = ref.current.scrollTop;
+    const idx = clamp(
+      Math.round((top + CENTER_OFFSET) / ITEM_H),
+      0,
+      options.length - 1
+    );
     const v = options[idx];
     if (String(v) !== String(value ?? "")) onChange(v);
   }, [value, options, onChange]);
@@ -178,11 +188,15 @@ function Wheel({
       className="relative h-[200px] w-full overflow-y-scroll scrollbar-none snap-y snap-mandatory"
       style={{ maskImage: "linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)" }}
     >
-      <div className="pointer-events-none absolute top-[80px] left-0 right-0 h-[40px] border-y border-white/20" />
+      {/* selection band centered */}
+      <div
+        className="pointer-events-none absolute left-0 right-0 border-y border-white/20"
+        style={{ top: CENTER_OFFSET, height: ITEM_H }}
+      />
       {options.map((o) => (
         <div
           key={String(o)}
-          className={`h-[${ITEM_H}px] flex items-center justify-center snap-start`}
+          className="flex items-center justify-center snap-start"
           style={{ height: ITEM_H }}
           onClick={() => onChange(o)}
         >
@@ -211,6 +225,13 @@ export default function Register() {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // ✅ keep the real File to upload after registration
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  // ✅ blocking overlay state + lottie container
+  const [blocking, setBlocking] = useState(false);
+  const lottieRef = useRef<HTMLDivElement | null>(null);
+
   // form (ALL FIELDS EMPTY BY DEFAULT)
   const [form, setForm] = useState({
     // Page 0
@@ -221,6 +242,7 @@ export default function Register() {
     // Page 1 (gender + dob)
     gender: "" as "" | "male" | "female",
     dateOfBirth: "",
+    preferred_gender: "" as "" | "male" | "female",
 
     // Page 2
     interests: [] as number[],
@@ -233,7 +255,7 @@ export default function Register() {
 
     // Page 5
     bio: "",
-    avataar: "", // base64 data URL (string)
+    avataar: "", // base64 data URL (string, preview only)
   });
 
   // ----- DOB wheel state (start empty) -----
@@ -326,8 +348,14 @@ export default function Register() {
         origFilename
       );
       const compressed = await compressImage(croppedFile, 300);
+
+      // keep the real file for upload after registration
+      setAvatarFile(compressed);
+
+      // and a preview for UI
       const dataUrl = await fileToDataUrl(compressed);
       onChange("avataar", dataUrl);
+
       setIsCropOpen(false);
       if (pickedUrl) URL.revokeObjectURL(pickedUrl);
       setPickedUrl(null);
@@ -339,19 +367,45 @@ export default function Register() {
     }
   };
 
+  // ----- Lottie overlay controller (only during final submit) -----
+  useEffect(() => {
+    let anim: any;
+    (async () => {
+      if (blocking && lottieRef.current) {
+        const lottie = (await import("lottie-web")).default;
+        anim = lottie.loadAnimation({
+          container: lottieRef.current,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          path: "/createacc_lottie.json", // from /public
+        });
+      }
+    })();
+    return () => { if (anim) anim.destroy(); };
+  }, [blocking]);
+
   // ----- submit -----
   const submit = async () => {
     setErr(null);
     setSaving(true);
+    setBlocking(true); // show overlay while we register + upload avatar
     try {
-      await registerUser({
-        ...form,
-      } as any);
+      // don't send big dataURL to /user/register
+      const { avataar, ...rest } = form;
+
+      await registerUser(rest as any);
+
+      if (avatarFile) {
+        await uploadAvatar(avatarFile); // multipart upload same as Profile page
+      }
+
       window.location.href = "/feed";
     } catch (e: any) {
       setErr(e?.response?.data?.message || e?.message || "Registration failed");
     } finally {
       setSaving(false);
+      setBlocking(false); // will unmount overlay if we didn't redirect
     }
   };
 
@@ -507,7 +561,13 @@ export default function Register() {
                     className={`flex flex-col items-center gap-2 rounded-2xl p-4 ${
                       active ? "bg-[#FF5069]/20" : "bg-white/5"
                     }`}
-                    onClick={() => onChange("gender", g)}
+                    onClick={() =>
+                      setForm(f => ({
+                        ...f,
+                        gender: g,
+                        preferred_gender: g === "male" ? "female" : "male"
+                      }))
+                    }
                     type="button"
                   >
                     {g === "male" ? <MaleIcon active={active} /> : <FemaleIcon active={active} />}
@@ -801,6 +861,18 @@ export default function Register() {
           </>
         )}
       </AnimatePresence>
+
+      {/* ✅ Blocking Lottie overlay during final submit only */}
+      {blocking && (
+        <Portal>
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 select-none">
+            <div className="w-52 h-52" ref={lottieRef} />
+            <div className="absolute bottom-20 text-white/90 text-sm">
+              Creating your account…
+            </div>
+          </div>
+        </Portal>
+      )}
     </div>
   );
 }
@@ -825,6 +897,12 @@ export default function Register() {
 // import { getCroppedImageFile } from "../../shared/utils/cropper";
 // import Portal from "../../shared/components/portal";
 
+// import { motion, AnimatePresence, type Variants } from "framer-motion";
+// import { createLucideIcon } from "lucide-react";
+// import { uploadAvatar } from "../../shared/api";
+// import { useToast } from "../../shared/components/Toast"; // optional feedback
+
+
 // // ------------ icons (converted from the Android VectorDrawable you shared) ------------
 // const MaleIcon = ({ active }: { active?: boolean }) => (
 //   <svg width="96" height="96" viewBox="0 0 24 24" aria-hidden>
@@ -843,6 +921,23 @@ export default function Register() {
 //     />
 //   </svg>
 // );
+
+// // ------------ FeedMobile's bottom sheet bits (unchanged styling) ------------
+// export const DashWide = createLucideIcon("DashWide", [
+//   ["line", { x1: "2", y1: "12", x2: "22", y2: "12", key: "line" }],
+// ]);
+
+// const sheetVariants: Variants = {
+//   hidden: { y: "100%" },
+//   visible: {
+//     y: 0,
+//     transition: { type: "spring", stiffness: 380, damping: 40 },
+//   },
+//   exit: {
+//     y: "100%",
+//     transition: { type: "spring", stiffness: 380, damping: 40 },
+//   },
+// };
 
 // // ------------ small helpers ------------
 // function clamp(v: number, min: number, max: number) {
@@ -925,6 +1020,8 @@ export default function Register() {
 
 // // ------------ DOB Wheel (simple scroll “picker”) ------------
 // const ITEM_H = 40;
+// const VIEW_H = 200;                                // matches className h-[200px]
+// const CENTER_OFFSET = (VIEW_H - ITEM_H) / 2;       // 80px center band
 
 // function Wheel({
 //   options,
@@ -937,22 +1034,27 @@ export default function Register() {
 //   onChange: (v: string | number) => void;
 //   ariaLabel: string;
 // }) {
-//   const ref = useRef<HTMLDivElement>(null);
+//   const ref = React.useRef<HTMLDivElement>(null);
 
-//   // only scroll to selected if there IS a selected value
-//   useEffect(() => {
-//     if (value == null) return;
-//     const idx = options.findIndex((o) => String(o) === String(value));
-//     if (idx >= 0 && ref.current) {
-//       ref.current.scrollTo({ top: idx * ITEM_H - ITEM_H, behavior: "smooth" });
+//   // Scroll the selected item under the center band
+//   React.useEffect(() => {
+//     if (value == null || !ref.current) return;
+//     const idx = options.findIndex(o => String(o) === String(value));
+//     if (idx >= 0) {
+//       const top = Math.max(0, idx * ITEM_H - CENTER_OFFSET);
+//       ref.current.scrollTo({ top, behavior: "smooth" });
 //     }
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [value]);
+//   }, [value, options]);
 
-//   const onScroll = useCallback(() => {
+//   // Pick the item currently under the center band
+//   const onScroll = React.useCallback(() => {
 //     if (!ref.current) return;
-//     // do not auto-pick until the user actually scrolls (this handler only runs on user scroll)
-//     const idx = clamp(Math.round(ref.current.scrollTop / ITEM_H), 0, options.length - 1);
+//     const top = ref.current.scrollTop;
+//     const idx = clamp(
+//       Math.round((top + CENTER_OFFSET) / ITEM_H),
+//       0,
+//       options.length - 1
+//     );
 //     const v = options[idx];
 //     if (String(v) !== String(value ?? "")) onChange(v);
 //   }, [value, options, onChange]);
@@ -965,11 +1067,15 @@ export default function Register() {
 //       className="relative h-[200px] w-full overflow-y-scroll scrollbar-none snap-y snap-mandatory"
 //       style={{ maskImage: "linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)" }}
 //     >
-//       <div className="pointer-events-none absolute top-[80px] left-0 right-0 h-[40px] border-y border-white/20" />
+//       {/* selection band centered */}
+//       <div
+//         className="pointer-events-none absolute left-0 right-0 border-y border-white/20"
+//         style={{ top: CENTER_OFFSET, height: ITEM_H }}
+//       />
 //       {options.map((o) => (
 //         <div
 //           key={String(o)}
-//           className={`h-[${ITEM_H}px] flex items-center justify-center snap-start`}
+//           className="flex items-center justify-center snap-start"
 //           style={{ height: ITEM_H }}
 //           onClick={() => onChange(o)}
 //         >
@@ -1008,7 +1114,7 @@ export default function Register() {
 //     // Page 1 (gender + dob)
 //     gender: "" as "" | "male" | "female",
 //     dateOfBirth: "",
-
+//     preferred_gender: "" as "" | "male" | "female",
 //     // Page 2
 //     interests: [] as number[],
 
@@ -1020,7 +1126,7 @@ export default function Register() {
 
 //     // Page 5
 //     bio: "",
-//     avataar: "", // base64 data URL (string) => backend can store it
+//     avataar: "", // base64 data URL (string)
 //   });
 
 //   // ----- DOB wheel state (start empty) -----
@@ -1038,14 +1144,13 @@ export default function Register() {
 //   const [dobDay, setDobDay] = useState<number | null>(null);
 
 //   const daysInMonth = useMemo(() => {
-//     // If year or month is unset, default to 31 days for the wheel until user picks
 //     const y = dobYear ?? 2000;
 //     const m = dobMonth ?? 1;
 //     return new Date(y, m, 0).getDate();
 //   }, [dobYear, dobMonth]);
 //   const DAYS = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth]);
 
-//   // sync wheel -> form.dateOfBirth (only when all parts chosen)
+//   // sync wheel -> form.dateOfBirth
 //   useEffect(() => {
 //     if (dobYear && dobMonth && dobDay) {
 //       setForm((f) => ({ ...f, dateOfBirth: toDateString(dobYear, dobMonth, dobDay) }));
@@ -1054,7 +1159,7 @@ export default function Register() {
 //     }
 //   }, [dobYear, dobMonth, dobDay]);
 
-//   // fetch selects (same mapping you used previously so dropdowns show)
+//   // fetch selects (same mapping)
 //   useEffect(() => {
 //     getSchools()
 //       .then((res: any[]) => setSchools(res.map((s: any) => ({ id: s.id, name: s.school_name }))))
@@ -1134,7 +1239,6 @@ export default function Register() {
 //     try {
 //       await registerUser({
 //         ...form,
-//         // send exactly what your backend expects
 //       } as any);
 //       window.location.href = "/feed";
 //     } catch (e: any) {
@@ -1180,6 +1284,37 @@ export default function Register() {
 //     form.bio,
 //   ]);
 
+//   // ----- bottom sheet for Step 0 selections (FeedMobile UI) -----
+//   const [sheetOpen, setSheetOpen] = useState(false);
+//   const [sheetFor, setSheetFor] = useState<null | "department" | "school" | "programme">(null);
+
+//   const openSheet = (which: "department" | "school" | "programme") => {
+//     setSheetFor(which);
+//     setSheetOpen(true);
+//   };
+
+//   const getLabel = (which: "department" | "school" | "programme", id: number) => {
+//     const list =
+//       which === "department" ? departments : which === "school" ? schools : programmes;
+//     return list.find((x) => x.id === id)?.name || "";
+//   };
+
+//   const currentSheetOptions: OptionItem[] = useMemo(() => {
+//     if (sheetFor === "department") return departments;
+//     if (sheetFor === "school") return schools;
+//     if (sheetFor === "programme") return programmes;
+//     return [];
+//   }, [sheetFor, departments, schools, programmes]);
+
+//   const handlePick = (id: number) => {
+//     if (!sheetFor) return;
+//     if (sheetFor === "department") onChange("department_id", id);
+//     if (sheetFor === "school") onChange("school_id", id);
+//     if (sheetFor === "programme") onChange("programme_id", id);
+//     setSheetOpen(false);
+//     setSheetFor(null);
+//   };
+
 //   return (
 //     <div className="min-h-screen bg-[#0D0002] text-white">
 //       {/* top bar progress */}
@@ -1206,7 +1341,7 @@ export default function Register() {
 
 //         {err && <div className="text-red-400 mb-3">{err}</div>}
 
-//         {/* STEP 0: identity (name/email + selects) */}
+//         {/* STEP 0: identity (name/email + menu-card pickers) */}
 //         {step === 0 && (
 //           <div className="space-y-6">
 //             <div>
@@ -1218,45 +1353,37 @@ export default function Register() {
 //               <div className="px-4 py-3 bg-black/40 rounded-xl">{email || "—"}</div>
 //             </div>
 
+//             {/* Triggers that open the FeedMobile-style sheet */}
 //             <div className="space-y-4">
-//               <select
-//                 className="w-full px-4 py-3 bg-black/60 rounded-xl"
-//                 value={form.department_id}
-//                 onChange={(e) => onChange("department_id", Number(e.target.value))}
+//               <button
+//                 type="button"
+//                 className="w-full px-4 py-3 bg-black/60 rounded-xl text-left"
+//                 onClick={() => openSheet("department")}
 //               >
-//                 <option value={0}>Select department</option>
-//                 {departments.map((d) => (
-//                   <option key={d.id} value={d.id}>
-//                     {d.name}
-//                   </option>
-//                 ))}
-//               </select>
+//                 {form.department_id
+//                   ? `Department: ${getLabel("department", form.department_id)}`
+//                   : "Select department"}
+//               </button>
 
-//               <select
-//                 className="w-full px-4 py-3 bg-black/60 rounded-xl"
-//                 value={form.school_id}
-//                 onChange={(e) => onChange("school_id", Number(e.target.value))}
+//               <button
+//                 type="button"
+//                 className="w-full px-4 py-3 bg-black/60 rounded-xl text-left"
+//                 onClick={() => openSheet("school")}
 //               >
-//                 <option value={0}>Select school</option>
-//                 {schools.map((s) => (
-//                   <option key={s.id} value={s.id}>
-//                     {s.name}
-//                   </option>
-//                 ))}
-//               </select>
+//                 {form.school_id
+//                   ? `School: ${getLabel("school", form.school_id)}`
+//                   : "Select school"}
+//               </button>
 
-//               <select
-//                 className="w-full px-4 py-3 bg-black/60 rounded-xl"
-//                 value={form.programme_id}
-//                 onChange={(e) => onChange("programme_id", Number(e.target.value))}
+//               <button
+//                 type="button"
+//                 className="w-full px-4 py-3 bg-black/60 rounded-xl text-left"
+//                 onClick={() => openSheet("programme")}
 //               >
-//                 <option value={0}>Select programme</option>
-//                 {programmes.map((p) => (
-//                   <option key={p.id} value={p.id}>
-//                     {p.name}
-//                   </option>
-//                 ))}
-//               </select>
+//                 {form.programme_id
+//                   ? `Programme: ${getLabel("programme", form.programme_id)}`
+//                   : "Select programme"}
+//               </button>
 //             </div>
 //           </div>
 //         )}
@@ -1273,7 +1400,14 @@ export default function Register() {
 //                     className={`flex flex-col items-center gap-2 rounded-2xl p-4 ${
 //                       active ? "bg-[#FF5069]/20" : "bg-white/5"
 //                     }`}
-//                     onClick={() => onChange("gender", g)}
+//                     onClick={() =>
+//                       setForm(f => ({
+//                         ...f,
+//                         gender: g,
+//                         preferred_gender: g === "male" ? "female" : "male"
+//                       }))
+//                     }
+                    
 //                     type="button"
 //                   >
 //                     {g === "male" ? <MaleIcon active={active} /> : <FemaleIcon active={active} />}
@@ -1506,7 +1640,67 @@ export default function Register() {
 //           </div>
 //         </Portal>
 //       )}
+
+//       {/* FeedMobile-style bottom sheet for Step 0 choices (unchanged styling) */}
+//       <AnimatePresence>
+//         {sheetOpen && sheetFor && (
+//           <>
+//             {/* backdrop */}
+//             <motion.button
+//               type="button"
+//               aria-label="Close"
+//               onClick={() => (saving ? null : (setSheetOpen(false), setSheetFor(null)))}
+//               className="fixed inset-[0rem] z-[60] bg-[transparent] border-none"
+//               initial={{ opacity: 0 }}
+//               animate={{ opacity: 1 }}
+//               exit={{ opacity: 0 }}
+//             />
+//             {/* sheet */}
+//             <motion.div
+//               className="fixed left-[0rem] right-[0rem] bottom-[0rem] z-[61]"
+//               variants={sheetVariants}
+//               initial="hidden"
+//               animate="visible"
+//               exit="exit"
+//               drag="y"
+//               dragConstraints={{ top: 0, bottom: 0 }}
+//               dragElastic={0.1}
+//               onDragEnd={(_, info) => {
+//                 if (info.offset.y > 60) {
+//                   setSheetOpen(false);
+//                   setSheetFor(null);
+//                 }
+//               }}
+//             >
+//               <div className="bg-[#121212] flex flex-col justify-center item-center rounded-t-[1.25rem] px-[1rem] pb-[1rem]">
+//                 {/* grabber (same as FeedMobile) */}
+//                 <div className="w-full flex justify-center">
+//                   <DashWide style={{ width: "10rem", height: "3rem", color: "white", padding: "0rem" }} strokeWidth={2.5} />
+//                 </div>
+//                 <div className="mx-auto mb-[0.6rem] h-[0.3rem] w-[2.5rem] rounded-full bg-white/20" />
+
+//                 {/* options list (scrollable if long) */}
+//                 <div className="max-h-[50vh] overflow-y-auto">
+//                   {currentSheetOptions.map((opt, idx) => (
+//                     <React.Fragment key={opt.id}>
+//                       <button
+//                         className="w-full text-left text-[1.05rem] bg-[transparent] border-none py-[0.9rem] text-white"
+//                         onClick={() => handlePick(opt.id)}
+//                       >
+//                         {opt.name}
+//                       </button>
+//                       {idx < currentSheetOptions.length - 1 && <div className="h-[1px] bg-white/10" />}
+//                     </React.Fragment>
+//                   ))}
+//                 </div>
+
+//                 {/* Safe area padding */}
+//                 <div style={{ paddingBottom: "env(safe-area-inset-bottom)" }} />
+//               </div>
+//             </motion.div>
+//           </>
+//         )}
+//       </AnimatePresence>
 //     </div>
 //   );
 // }
-

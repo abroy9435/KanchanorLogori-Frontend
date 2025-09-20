@@ -1,8 +1,36 @@
 /index.html
+  Cache-Control: no-store
+
+/offline.html
+  Cache-Control: no-store
+
+/manifest.webmanifest
   Cache-Control: no-cache
 
 /sw.js
-  Cache-Control: no-cache
+  Cache-Control: no-store
+  Service-Worker-Allowed: /
 
+# If this file still exists; otherwise you can delete this block
 /firebase-messaging-sw.js
-  Cache-Control: no-cache
+  Cache-Control: no-store
+  Service-Worker-Allowed: /
+
+# Hashed build assets (Vite puts these under /assets/)
+# Long-lived + immutable = blazing fast, safe because filenames change on build
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Public static images (icons, placeholders, etc.)
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+/*.jpeg
+  Cache-Control: public, max-age=31536000, immutable
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+/*.ico
+  Cache-Control: public, max-age=31536000, immutable
