@@ -11,6 +11,7 @@ import { MoreVertical } from "lucide-react";
 import { calculateAge } from "../../shared/utils/age";
 // import { Minus } from "lucide-react";
 import { createLucideIcon } from "lucide-react";
+import LoadingScreen from "../../shared/components/LoadingScreen";
 
 export const DashWide = createLucideIcon("DashWide", [
   ["line", { x1: "2", y1: "12", x2: "22", y2: "12", key: "line" }]
@@ -185,12 +186,9 @@ export default function FeedMobile() {
   // Loading state
   // ---------------------------
   if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-full text-gray-300 pb-20">
-        Loading profiles...
-      </div>
-    );
+    return <LoadingScreen />;
   }
+  
 
   // ---------------------------
   // No-more-profiles "card"

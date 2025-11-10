@@ -130,6 +130,7 @@ import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { registerPushTokenForUser } from "../services/pushService";
 import { useToast } from "../components/Toast";
+import AuthLoading from "../components/AuthLoader";
 
 type Ctx = { user: User | null; loading: boolean };
 const AuthContext = createContext<Ctx>({ user: null, loading: true });
@@ -179,13 +180,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [push]);
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center text-white">
-        Checking session...
-      </div>
-    );
+    return<AuthLoading/>;
   }
-
   return <AuthContext.Provider value={{ user, loading }}>{children}</AuthContext.Provider>;
 };
 
