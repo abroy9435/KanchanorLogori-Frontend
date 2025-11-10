@@ -11,6 +11,7 @@ import { useToast } from "../../shared/components/Toast";
 import { ArrowLeft } from "lucide-react";
 import { createLucideIcon } from "lucide-react";
 import { makeUpdateFormData } from "../../shared/utils/makeUpdateFormData";
+import { ChevronDown } from "lucide-react";
 // ---- FeedMobile-style dash icon (same as your Feed page)
 export const DashWide = createLucideIcon("DashWide", [
   ["line", { x1: "2", y1: "12", x2: "22", y2: "12", key: "line" }],
@@ -42,18 +43,18 @@ function arraysEqual(a: number[], b: number[]) {
 
 // ---- Gender icons from your VectorDrawables
 const MaleIcon = ({ active }: { active?: boolean }) => (
-  <svg width="72" height="72" viewBox="0 0 24 24" aria-hidden>
+  <svg width="" height="" viewBox="0 0 24 24" aria-hidden>
     <path
       d="M9.5,11c1.93,0 3.5,1.57 3.5,3.5S11.43,18 9.5,18S6,16.43 6,14.5S7.57,11 9.5,11zM9.5,9C6.46,9 4,11.46 4,14.5S6.46,20 9.5,20s5.5,-2.46 5.5,-5.5c0,-1.16 -0.36,-2.23 -0.97,-3.12L18,7.42V10h2V4h-6v2h2.58l-3.97,3.97C11.73,9.36 10.66,9 9.5,9z"
-      fill={active ? "#FF5069" : "#FFFFFF"}
+      fill={active ? "#FF5069" : "#FF506933"}
     />
   </svg>
 );
 const FemaleIcon = ({ active }: { active?: boolean }) => (
-  <svg width="72" height="72" viewBox="0 0 24 24" aria-hidden>
+  <svg width="" height="" viewBox="0 0 24 24" aria-hidden>
     <path
       d="M17.5,9.5C17.5,6.46 15.04,4 12,4S6.5,6.46 6.5,9.5c0,2.7 1.94,4.93 4.5,5.4V17H9v2h2v2h2v-2h2v-2h-2v-2.1C15.56,14.43 17.5,12.2 17.5,9.5zM8.5,9.5C8.5,7.57 10.07,6 12,6s3.5,1.57 3.5,3.5S13.93,13 12,13S8.5,11.43 8.5,9.5z"
-      fill={active ? "#FF5069" : "#FFFFFF"}
+      fill={active ? "#FF5069" : "#FF506933"}
     />
   </svg>
 );
@@ -250,10 +251,10 @@ export default function EditProfileMobile() {
       : null);
 
   return (
-    <div className="min-h-screen bg-[#0D0002] text-white pb-28">
+    <div className="min-h-screen bg-[#1F0004] text-white pb-28">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0D0002] px-4 pt-4 pb-2 flex items-center gap-3">
-        <button className="p-2 rounded-xl bg-white/10" onClick={() => navigate(-1)} aria-label="Back">
+      <div className="sticky top-0 z-10 bg-[#1F0004] px-4 pt-4 pb-2 flex items-center gap-3">
+        <button className="p-2 rounded-xl bg-transparent" onClick={() => navigate(-1)} aria-label="Back">
           <ArrowLeft />
         </button>
         <h1 className="text-xl font-semibold">Edit Profile</h1>
@@ -262,47 +263,50 @@ export default function EditProfileMobile() {
       <div className="px-4 space-y-6">
         {/* name & email (read-only) */}
         <div>
-          <div className="text-white/70 text-sm mb-1">Name</div>
-          <div className="px-4 py-3 rounded-xl bg-white/5">{name || "—"}</div>
+          {/* <div className="text-white/70 text-sm mb-1">Name</div> */}
+          <div className="px-[1rem] py-[0.6rem] mx-[0.7rem] mb-[0.6rem] rounded-[0.3rem] bg-[#0D0002]">{name || "—"}</div>
         </div>
         <div>
-          <div className="text-white/70 text-sm mb-1">Email</div>
-          <div className="px-4 py-3 rounded-xl bg-white/5">{email || "—"}</div>
+          {/* <div className="text-white/70 text-sm mb-1">Email</div> */}
+          <div className="px-[1rem] py-[0.6rem] mx-[0.7rem] mb-[0.6rem] rounded-[0.3rem] bg-[#0D0002]">{email || "—"}</div>
         </div>
 
         {/* educational details using FeedMobile-style MENU CARD pickers */}
         <div className="space-y-3">
-          <div className="text-white/70 text-sm">Educational details</div>
+          <p className="text-[1.3rem] mx-[1rem]">Educational details</p>
 
           <button
             type="button"
             onClick={() => setPicker("department")}
-            className="w-full px-4 py-3 rounded-xl bg-black/60 text-left"
+            className="px-[1rem] py-[0.6rem] mx-[0.7rem] mb-[0.6rem] rounded-[0.3rem] bg-[#0D0002] w-full flex justify-between items-center"
           >
-            {labelOf(departments, departmentId, "Select department")}
+            {labelOf(departments, departmentId, "Select department")} 
+            <ChevronDown size={22} className="opacity-70" />
           </button>
 
           <button
             type="button"
             onClick={() => setPicker("school")}
-            className="w-full px-4 py-3 rounded-xl bg-black/60 text-left"
+            className="px-[1rem] py-[0.6rem] mx-[0.7rem] mb-[0.6rem] rounded-[0.3rem] bg-[#0D0002] w-full flex justify-between items-center"
           >
             {labelOf(schools, schoolId, "Select school")}
+            <ChevronDown size={22} className="opacity-70" />
           </button>
 
           <button
             type="button"
             onClick={() => setPicker("programme")}
-            className="w-full px-4 py-3 rounded-xl bg-black/60 text-left"
+            className="px-[1rem] py-[0.6rem] mx-[0.7rem] mb-[0.6rem] rounded-[0.3rem] bg-[#0D0002] w-full flex justify-between items-center"
           >
             {labelOf(programmes, programmeId, "Select programme")}
+            <ChevronDown size={22} className="opacity-70" />
           </button>
         </div>
 
         {/* gender */}
         <div className="space-y-3">
-          <div className="text-white/70 text-sm">Your gender</div>
-          <div className="flex items-center gap-6">
+          <p className="text-[1.3rem] mx-[1rem]">Your gender</p>
+          <div className="flex justify-center items-center gap-[1rem]">
             {(["male", "female"] as const).map((g) => {
               const active = gender === g;
               return (
@@ -311,11 +315,11 @@ export default function EditProfileMobile() {
                   type="button"
                   onClick={() => setGender(g)}
                   className={`flex flex-col items-center gap-1 rounded-2xl p-3 ${
-                    active ? "bg-[#FF5069]/20" : "bg-white/5"
+                    active ? "bg-transparent" : "bg-transparent"
                   }`}
                 >
                   {g === "male" ? <MaleIcon active={active} /> : <FemaleIcon active={active} />}
-                  <span className={active ? "text-[#FF5069]" : ""}>{g[0].toUpperCase() + g.slice(1)}</span>
+                  <span className={active ? "text-[#FF5069]" : "text-[#FF5069]/20"}>{g[0].toUpperCase() + g.slice(1)}</span>
                 </button>
               );
             })}
@@ -324,10 +328,10 @@ export default function EditProfileMobile() {
 
         {/* DOB */}
         <div>
-          <div className="text-white/70 text-sm mb-2">Your date of birth</div>
+          <p className="text-[1.3rem] mx-[1rem]">Your date of birth</p>
           <input
             type="date"
-            className="w-full px-4 py-3 rounded-xl bg-black/60"
+            className=" w-[6rem] h-[2rem] border-none px-[1rem] py-[0.6rem] mx-[0.7rem] mb-[0.6rem] rounded-[0.3rem] bg-[#0D0002]"
             value={dateOfBirth || ""}
             onChange={(e) => setDateOfBirth(e.target.value)}
           />
@@ -335,8 +339,8 @@ export default function EditProfileMobile() {
 
         {/* Interests */}
         <div>
-          <div className="text-white/70 text-sm mb-2">Your interests</div>
-          <div className="flex flex-wrap gap-2">
+          <div className="text-[1.3rem] mx-[1rem] mb-[0.2rem]">Your interests</div>
+          <div className="flex flex-wrap gap-[0.8rem] mx-[0.7rem] mb-[0.6rem]">
             {INTERESTS.map((i) => {
               const selected = interests.includes(i.id);
               const full = !selected && interests.length >= 4;
@@ -346,28 +350,28 @@ export default function EditProfileMobile() {
                   type="button"
                   onClick={() => toggleInterest(i.id)}
                   disabled={full}
-                  className={`px-3 py-1 rounded-full border text-sm transition
-                    ${selected ? "bg-[#FF5069] border-[#FF5069] text-white" : `bg-transparent border-white/20 ${full ? "opacity-40" : ""}`}`}
+                  className={`px-[0.5rem] py-[0.4rem]  rounded-full !border !border-[#FF5069] text-[1rem] transition
+                    ${selected ? "bg-[#FF5069] !text-[#0D0002]" : `bg-transparent ${full ? "opacity-40" : ""}`}`}
                 >
                   {i.name}
                 </button>
               );
             })}
           </div>
-          <div className="text-xs text-white/60 mt-1">{interests.length}/4 selected</div>
+          <div className="text-[0.7rem] text-white/60 mx-[0.7rem] mb-[0.6rem]">{interests.length}/4 selected</div>
         </div>
 
         {/* Personality */}
         <div>
-          <div className="text-white/70 text-sm mb-2">Your personality</div>
-          <div className="space-y-2">
+          <div className="text-[1.3rem] mx-[1rem] mb-[0.2rem]">Your personality</div>
+          <div className="mx-[0.7rem] mb-[0.6rem]">
             {PERSONALITIES.map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPersonality(p)}
-                className={`w-full text-left px-4 py-3 rounded-xl ${
-                  personality === p ? "bg-[#FF5069] text-white" : "bg-white/5"
+                className={`w-full text-left !bg-[#0D0002] text-[1.1rem] px-[0.8rem] h-[2.5rem] py-3 rounded-[0.2rem] mb-[0.8rem] ${
+                  personality === p ? "!border !border-[#FF5069] !text-[#FF5069]" : "!border !border-transparent"
                 }`}
               >
                 {p}
@@ -378,15 +382,15 @@ export default function EditProfileMobile() {
 
         {/* Looking for */}
         <div>
-          <div className="text-white/70 text-sm mb-2">You are looking for</div>
-          <div className="space-y-2">
+          <div className="text-[1.3rem] mx-[1rem] mb-[0.2rem]">You are looking for</div>
+          <div className="mx-[0.7rem] mb-[0.6rem]">
             {LOOKING.map((opt) => (
               <button
                 key={opt.id}
                 type="button"
                 onClick={() => setLookingFor(opt.id)}
-                className={`w-full text-left px-4 py-3 rounded-xl ${
-                  lookingFor === opt.id ? "bg-[#FF5069] text-white" : "bg-white/5"
+                className={`w-full text-left !bg-[#0D0002] text-[1.1rem] px-[0.8rem] h-[2.5rem] rounded-[0.2rem] mb-[0.8rem] ${
+                  lookingFor === opt.id ? "!border !border-[#FF5069] !text-[#FF5069]" : "!border !border-transparent"
                 }`}
               >
                 {opt.label}
@@ -397,36 +401,37 @@ export default function EditProfileMobile() {
 
         {/* Bio */}
         <div>
-          <div className="text-white/70 text-sm mb-2">About you</div>
+          <div className="ext-[1.3rem] mx-[1rem] mb-[0.2rem]">About you</div>
           <textarea
-            className="w-full h-36 px-4 py-3 rounded-2xl bg-white/5"
+            className="w-[20rem] h-[3rem] px-[0.5rem] py-[0.5rem] mx-[0.7rem] rounded-[0.2rem] bg-[#0D0002] border-transparent"
             placeholder="Tell people what makes you unique!"
             value={bio}
             maxLength={300}
             onChange={(e) => setBio(e.target.value)}
           />
-          <div className="text-right text-xs text-white/50">{bio.length}/300</div>
+          <div className="text-right text-[0.7rem] mx-[0.9rem] text-white/50">{bio.length}/300</div>
         </div>
       </div>
 
       {/* --- Footer actions --- */}
-      <div className="sticky bottom-0 left-0 right-0 bg-[#0D0002] px-5 py-4 border-t border-white/10">
-        <div className="flex justify-end gap-3">
+      <div className="flex items-center justify-center px-[5rem] py-[5rem]">
+        <div className="flex flex-col">
           <button
             type="button"
-            className="px-5 py-3 rounded-2xl bg-white/10"
+            className="px-[1rem] py-[0.5rem] rounded-[5rem] text-[1rem] mb-[0.8rem] bg-[#FF5069] text-white disabled:opacity-50"
+            onClick={onSave}
+            disabled={!canSubmit}
+          >
+            {saving ? "Updating..." : "Update Profile"}
+          </button>
+
+          <button
+            type="button"
+            className="px-[3rem] py-[0.5rem] text-[1rem] rounded-[5rem] bg-[#0D0002]"
             onClick={() => navigate(-1)}
             disabled={saving}
           >
             Cancel
-          </button>
-          <button
-            type="button"
-            className="px-6 py-3 rounded-2xl bg-[#FF5069] text-white disabled:opacity-50"
-            onClick={onSave}
-            disabled={!canSubmit}
-          >
-            {saving ? "Updating..." : "Update"}
           </button>
         </div>
       </div>

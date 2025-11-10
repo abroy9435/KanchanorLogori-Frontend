@@ -87,7 +87,7 @@ button,
   -webkit-appearance: none;
   appearance: none;
   color: inherit;          /* use your theme color */
-  background: transparent; /* you style via Tailwind/classes */
+   /* you style via Tailwind/classes */
   border: none;            /* optional: remove native border */
 }
 
