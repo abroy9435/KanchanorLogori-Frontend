@@ -102,20 +102,25 @@ export default function PostMobile() {
       await uploadPost(finalFile, caption.trim());
 
       push({ message: "Post uploaded ✅", variant: "success" });
+      
+      // ✅ Show success pop
+      setShowSuccess(true);
 
       // ✅ Reset UI Preview
       setFinalFile(null);
       setFinalPreview(null);
       setCaption("");
 
-      // ✅ Show success pop
-      setShowSuccess(true);
-
       // ✅ After 2.5s → remove popup & navigate
       setTimeout(() => {
         setShowSuccess(false);
+      }, 2000);
+
+      if(finalFile!=null && finalPreview!=null && caption!=""){
         navigate("/post", { replace: true });
-      }, 2500);
+      } else{
+        navigate(0);
+      }
 
     } catch (err) {
       console.error(err);
@@ -128,7 +133,7 @@ export default function PostMobile() {
   return (
     <div
       className="
-        p-4 flex flex-col bg-[linear-gradient(to_bottom,#1F0004_20%,#360007_80%)]
+        p-4 flex flex-col bg-[linear-gradient(to_bottom,#0D0002_10%,#360007_90%)]
         min-h-screen w-screen text-white
       "
     >
@@ -146,7 +151,7 @@ export default function PostMobile() {
             {/* ✅ Image Picker / Preview */}
             <div
               className="
-                w-full aspect-[4/5] rounded-2xl bg-[#360007] border border-[#0D0002]
+                w-full aspect-[4/5] rounded-2xl bg-[#360007]/50 border border-[#0D0002]
                 border-x-[0.8rem] border-t-[0.7rem] border-b-[0.9rem] rounded-t-[1rem]
                 flex items-center justify-center overflow-hidden
               "
@@ -215,7 +220,7 @@ export default function PostMobile() {
         </div>
       )}
 
-      {/* ✅ ✅ SUCCESS POPUP */}
+      {/* ✅ SUCCESS POPUP */}
       {showSuccess && (
         <div className="fixed inset-[0px] z-[9999] flex items-center justify-center ">
           <motion.div
