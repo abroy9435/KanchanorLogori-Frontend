@@ -12,6 +12,7 @@ import type { Area } from "react-easy-crop";
 import { getCroppedImageFile } from "../../shared/utils/cropper";
 import Portal from "../../shared/components/portal";
 import { useToast } from "../../shared/components/Toast";
+import { motion} from "framer-motion";
 
 // Worker base provided by backend
 const WORKER_BASE = "https://r2-image-proxy.files-tu-dating-app.workers.dev/";
@@ -249,17 +250,27 @@ export default function UserProfileMobile() {
   };
 
   if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-full text-gray-300 pb-20">
-        Loading profile...
+    return(
+      <div className="flex gap-[0.5rem] items-center justify-center h-screen w-screen bg-black text-white">
+
+      {/* Text */}
+      <div className="animate-pulse text-lg italic">
+        Loading Your Profile
+      </div>
+      {/* Spinner */}
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+        className="w-[0.6rem] h-[0.6rem] border-[0.3rem] border-[#FF5069] border-t-transparent rounded-full"
+      />
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="flex flex-col justify-center items-center h-full text-gray-300 pb-20">
-        Failed to load profile.
+      <div className="flex gap-[0.5rem] items-center justify-center h-screen w-screen bg-black text-white">
+        Failed to load profile!!
       </div>
     );
   }
@@ -367,8 +378,8 @@ export default function UserProfileMobile() {
       {/* Cropper Modal via Portal */}
       {isCropOpen && (
         <Portal>
-          <div className="fixed inset-[0px] z-[9999] flex flex-col bg-black/80 overflow-hidden">
-            <div className="relative w-full h-[70vh] min-h-0">
+          <div className="fixed inset-[0px] p-[1rem] bg-[#0D0002] z-[9999] flex flex-col bg-black/80">
+            <div className="relative w-full h-[70vh] ">
               {pickedUrl && (
                 <Cropper
                   image={pickedUrl}
@@ -383,14 +394,20 @@ export default function UserProfileMobile() {
                   showGrid={true}
                   cropShape="rect"
                   objectFit="cover"
-                  classes={{ containerClassName: "absolute inset-0" }}
+                  classes={{ containerClassName: "absolute inset-[0px]" }}
                 />
               )}
             </div>
 
-            <div className="bg-[#0D0002] p-4 flex justify-between">
+            <div className="bg-[#0D0002] px-[3rem] pt-[1.5rem] flex flex-col gap-[1.2rem]">
               <button
-                className="px-4 py-2 bg-white/10 rounded-xl"
+                className="text-[1.2rem] py-[0.3rem] bg-[#FF5069] rounded-[2rem]"
+                onClick={        confirmCropAndUpload}
+              >
+                Use Photo
+              </button>
+              <button
+                className="text-[1.2rem] py-[0.3rem] bg-white/10 rounded-[2rem]"
                 onClick={() => {
                   setIsCropOpen(false);
                   if (pickedUrl) URL.revokeObjectURL(pickedUrl);
@@ -398,12 +415,6 @@ export default function UserProfileMobile() {
                 }}
               >
                 Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-[#FF5069] rounded-xl"
-                onClick={confirmCropAndUpload}
-              >
-                Use Photo
               </button>
             </div>
           </div>
