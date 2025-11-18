@@ -26,6 +26,17 @@ import { motion } from "framer-motion";
 const WORKER_BASE =
   "https://r2-image-proxy.files-tu-dating-app.workers.dev/";
 
+
+/* ---------------- LOOKING FOR MAP ----------------
+   adjust values if your backend uses different codes */
+   const LOOKING_FOR_MAP: Record<number, string> = {
+    0: "Dating and vibing",
+    1: "Long-term commitment",
+    2: "Something casual",
+    3: "I’m not sure"
+  };
+
+
 /* -------------------------------------------------------------------------- */
 /*                       STABLE WORKER URL BUILDERS (FIXED)                   */
 /* -------------------------------------------------------------------------- */
@@ -441,6 +452,12 @@ export default function UserProfileMobile() {
     );
   }
 
+    // derive "looking for" display text (support both numeric and string)
+    const lookingForText =
+    typeof profile.looking_for === "string"
+      ? profile.looking_for
+      : LOOKING_FOR_MAP[(profile.looking_for as unknown) as number] ?? "—";
+
   /* -------------------------------------------------------------------------- */
   /*                              MAIN RENDER                                   */
   /* -------------------------------------------------------------------------- */
@@ -532,6 +549,11 @@ export default function UserProfileMobile() {
           {profile.gender}, {profile.personality}
         </p>
 
+        {/* --- LOOKING FOR: placed directly under the age row to match screenshot --- */}
+          <p className="text-[0.95rem] text-white/90 mt-[0.25rem] ml-[1rem]">
+            Looking for {lookingForText}
+          </p>
+
         {/* Interests */}
         <div className="mt-[0.6rem] flex mx-[1rem] flex-wrap">
           {profile.interests.map((id: number) => {
@@ -593,7 +615,7 @@ export default function UserProfileMobile() {
             />
           </p>
         ) : posts.length === 0 ? (
-          <p className="mx-[1rem] text-white/60 mt-[0.5rem]">
+          <p className="mx-[0rem] min-h-screen flex justify-center text-white/60 mt-[0.5rem]">
             No posts yet.
           </p>
         ) : (
