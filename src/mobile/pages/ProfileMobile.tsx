@@ -1,7 +1,12 @@
 // src/mobile/pages/ProfileMobile.tsx
 "use client";
+
 import React, { useEffect, useState, useCallback } from "react";
-import { getMyProfile, uploadAvatar, getPosts as apiGetPosts } from "../../shared/api";
+import {
+  getMyProfile,
+  uploadAvatar,
+  getPosts as apiGetPosts,
+} from "../../shared/api";
 import type { UserProfileOnReceive } from "../../shared/types";
 import { Settings, Upload, Pencil } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,132 +19,151 @@ import Portal from "../../shared/components/portal";
 import { useToast } from "../../shared/components/Toast";
 import { motion } from "framer-motion";
 
-/* ---------------- WORKER ---------------- */
-const WORKER_BASE = "https://r2-image-proxy.files-tu-dating-app.workers.dev/";
+/* -------------------------------------------------------------------------- */
+/*                                WORKER BASE                                 */
+/* -------------------------------------------------------------------------- */
 
-/* ---------------- AVATAR URL BUILDER ---------------- */
-function toWorkerAvatarUrl(input?: string | null): string {
+const WORKER_BASE =
+  "https://r2-image-proxy.files-tu-dating-app.workers.dev/";
+
+/* -------------------------------------------------------------------------- */
+/*                       STABLE WORKER URL BUILDERS (FIXED)                   */
+/* -------------------------------------------------------------------------- */
+
+function toWorkerAvatarUrlClean(input?: string | null) {
   if (!input) return "";
-  let value = String(input).trim();
+  let v = String(input).trim();
 
-  if (/^https?:\/\//i.test(value)) {
+  if (/^https?:\/\//i.test(v)) {
     try {
-      const u = new URL(value);
-      value = u.pathname.replace(/^\//, "");
+      const u = new URL(v);
+      v = u.pathname.replace(/^\//, "");
     } catch {}
   }
 
-  const match = value.match(/avatars\/[^/?#]+\.jpg/i);
-  const path = match ? match[0] : value.replace(/^\//, "");
-  return `${WORKER_BASE}${path}?v=${Date.now()}`;
+  const match = v.match(/avatars\/[^/?#]+\.jpg/i);
+  const finalPath = match ? match[0] : v.replace(/^\//, "");
+  return `${WORKER_BASE}${finalPath}`;
 }
 
-/* ---------------- POST URL BUILDER ---------------- */
-function toWorkerPostUrl(input?: string | null): string {
+function toWorkerPostUrlClean(input?: string | null) {
   if (!input) return "";
-  let value = String(input).trim();
+  let v = String(input).trim();
 
-  if (/^https?:\/\//i.test(value)) {
+  if (/^https?:\/\//i.test(v)) {
     try {
-      const u = new URL(value);
-      value = u.pathname.replace(/^\//, "");
+      const u = new URL(v);
+      v = u.pathname.replace(/^\//, "");
     } catch {}
   }
 
-  value = value.replace(/^\//, "");
-  if (!value.startsWith("user_posts/")) {
-    const idx = value.indexOf("user_posts/");
-    if (idx !== -1) value = value.substring(idx);
+  v = v.replace(/^\//, "");
+
+  if (!v.startsWith("user_posts/")) {
+    const idx = v.indexOf("user_posts/");
+    if (idx !== -1) v = v.substring(idx);
   }
 
-  return `${WORKER_BASE}${value}?v=${Date.now()}`;
+  return `${WORKER_BASE}${v}`;
 }
 
-/* ---------------- COMPRESSOR ---------------- */
-async function compressImage(file: File, maxSizeKB = 300): Promise<File> {
+/* -------------------------------------------------------------------------- */
+/*                                  COMPRESS                                  */
+/* -------------------------------------------------------------------------- */
+
+async function compressImage(file: File, maxKB = 300): Promise<File> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    const reader = new FileReader();
+    const fr = new FileReader();
 
-    reader.onload = (e) => (img.src = e.target?.result as string);
-    reader.onerror = reject;
+    fr.onload = (e) => (img.src = e.target?.result as string);
+    fr.onerror = reject;
     img.onerror = reject;
 
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject("Canvas not supported");
+      const ctx = canvas.getContext("2d")!;
+      let w = img.width,
+        h = img.height;
 
-      let width = img.width,
-        height = img.height;
-      const maxDimension = 800;
-
-      if (width > height && width > maxDimension) {
-        height = (height * maxDimension) / width;
-        width = maxDimension;
-      } else if (height > width && height > maxDimension) {
-        width = (width * maxDimension) / height;
-        height = maxDimension;
+      const max = 800;
+      if (w > h && w > max) {
+        h = (h * max) / w;
+        w = max;
+      } else if (h > w && h > max) {
+        w = (w * max) / h;
+        h = max;
       }
 
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = w;
+      canvas.height = h;
 
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(img, 0, 0, width, height);
+      ctx.drawImage(img, 0, 0, w, h);
 
-      let quality = 0.9;
+      let q = 0.9;
 
-      const compressLoop = () => {
+      const loop = () =>
         canvas.toBlob(
           (blob) => {
-            if (!blob) return reject("Compression failed");
-            if (blob.size / 1024 > maxSizeKB && quality > 0.2) {
-              quality -= 0.1;
-              compressLoop();
+            if (!blob) return reject("No blob");
+            if (blob.size / 1024 > maxKB && q > 0.2) {
+              q -= 0.1;
+              loop();
             } else {
               resolve(
                 new File(
                   [blob],
-                  file.name.replace(/\.(png|webp|avif|heic|heif)$/i, ".jpg"),
+                  file.name.replace(/\.(png|avif|webp|heic|heif)$/i, ".jpg"),
                   { type: "image/jpeg" }
                 )
               );
             }
           },
           "image/jpeg",
-          quality
+          q
         );
-      };
 
-      compressLoop();
+      loop();
     };
 
-    reader.readAsDataURL(file);
+    fr.readAsDataURL(file);
   });
 }
 
-/* ---------------- TYPES ---------------- */
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
+
 type UserPost = {
   id: number;
   user_id: number;
   picture: string;
   caption: string;
   posted_on: string;
+
+  // NEW – stable URL assigned on load
+  workerUrl: string;
 };
 
-/* ---------------- COMPONENT ---------------- */
+/* -------------------------------------------------------------------------- */
+/*                           MAIN COMPONENT START                             */
+/* -------------------------------------------------------------------------- */
+
 export default function UserProfileMobile() {
-  const [profile, setProfile] = useState<UserProfileOnReceive | null>(null);
+  const [profile, setProfile] =
+    useState<UserProfileOnReceive | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [isCropOpen, setIsCropOpen] = useState(false);
   const [pickedUrl, setPickedUrl] = useState<string | null>(null);
   const [origFilename, setOrigFilename] = useState("avatar.jpg");
+
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] =
+    useState<Area | null>(null);
 
   const [imageLoading, setImageLoading] = useState(true);
   const [avatarUpdating, setAvatarUpdating] = useState(false);
@@ -147,24 +171,32 @@ export default function UserProfileMobile() {
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
 
-  const [activePostId, setActivePostId] = useState<number | null>(null);
-  const [prevAvatarUrl, setPrevAvatarUrl] = useState<string | null>(null);
+  const [postImageStatus, setPostImageStatus] = useState<
+    Record<number, "loading" | "loaded" | "error">
+  >({});
+
+  const [activePostId, setActivePostId] = useState<number | null>(
+    null
+  );
+
+  const [prevAvatarUrl, setPrevAvatarUrl] =
+    useState<string | null>(null);
 
   const navigate = useNavigate();
   const { push } = useToast();
 
-  /* ---------------- Post tile loaders ---------------- */
-  const [postImageStatus, setPostImageStatus] = useState<Record<number, "loading" | "loaded" | "error">>({});
+  /* -------------------------------------------------------------------------- */
+  /*                             FORMAT UTILITIES                               */
+  /* -------------------------------------------------------------------------- */
 
-  /* -------- Helper: Format Date for posts -------- */
   function formatDate(iso?: string | null) {
     if (!iso) return "";
     const d = new Date(iso);
     const day = d.getDate();
-    const month = d.toLocaleString("default", { month: "long" });
-    const year = d.getFullYear();
+    const m = d.toLocaleString("default", { month: "long" });
+    const y = d.getFullYear();
 
-    const suffix =
+    const suf =
       day % 10 === 1 && day !== 11
         ? "st"
         : day % 10 === 2 && day !== 12
@@ -173,32 +205,36 @@ export default function UserProfileMobile() {
         ? "rd"
         : "th";
 
-    return `${day}${suffix} ${month}, ${year}`;
+    return `${day}${suf} ${m}, ${y}`;
   }
 
-  /* -------- Helper: Extract Join Year -------- */
   function extractJoinYear(email?: string | null) {
     if (!email) return null;
-    const prefix = email.split("@")[0] || "";
-    const m = prefix.match(/(\d{2})/);
-    if (m && m[1]) {
-      return Number("20" + m[1]);
-    }
-    return null;
+    const pre = email.split("@")[0];
+    const m = pre.match(/(\d{2})/);
+    return m ? Number("20" + m[1]) : null;
   }
 
-  /* -------- Cropper opener -------- */
+  /* -------------------------------------------------------------------------- */
+  /*                          OPEN CROPPER (UNCHANGED)                          */
+  /* -------------------------------------------------------------------------- */
+
   const openCropperForFile = (file: File) => {
     if (pickedUrl) URL.revokeObjectURL(pickedUrl);
+
     const url = URL.createObjectURL(file);
-    setOrigFilename(file.name || "avatar.jpg");
+
     setPickedUrl(url);
-    setZoom(1);
+    setOrigFilename(file.name || "avatar.jpg");
     setCrop({ x: 0, y: 0 });
+    setZoom(1);
     setIsCropOpen(true);
   };
 
-  /* -------- Confirm Crop + Upload -------- */
+  /* -------------------------------------------------------------------------- */
+  /*                         CONFIRM CROP + UPLOAD AVATAR                       */
+  /* -------------------------------------------------------------------------- */
+
   const confirmCropAndUpload = async () => {
     if (!pickedUrl || !croppedAreaPixels) return;
 
@@ -218,21 +254,25 @@ export default function UserProfileMobile() {
         origFilename
       );
 
-      const compressed = await compressImage(cropped, 300);
+      const compressed = await compressImage(cropped);
 
       const resp = await uploadAvatar(compressed);
+      if (!resp?.avatar_url)
+        throw new Error("No avatar_url returned");
 
-      const newUrl = toWorkerAvatarUrl(resp?.avatar_url);
+      // Cache-bust ONLY avatar (correct behavior)
+      const newUrl =
+        toWorkerAvatarUrlClean(resp.avatar_url) + "?v=" + Date.now();
 
-      if (newUrl) {
-        setImageLoading(true);
-        setProfile((pr) => (pr ? { ...pr, avataar: newUrl } : pr));
-      } else {
-        setAvatarUpdating(false);
-      }
-
-      if (pickedUrl) URL.revokeObjectURL(pickedUrl);
-      setPickedUrl(null);
+      setImageLoading(true);
+      setProfile((p) =>
+        p
+          ? {
+              ...p,
+              avataar: newUrl,
+            }
+          : p
+      );
 
       push({ message: "Profile updated!", variant: "success" });
     } catch (err) {
@@ -240,15 +280,25 @@ export default function UserProfileMobile() {
       push({ message: "Avatar upload failed", variant: "error" });
       setAvatarUpdating(false);
     }
+
+    if (pickedUrl) URL.revokeObjectURL(pickedUrl);
+    setPickedUrl(null);
   };
 
-  /* ---------------- LOAD PROFILE ---------------- */
+  /* -------------------------------------------------------------------------- */
+  /*                              LOAD PROFILE                                  */
+  /* -------------------------------------------------------------------------- */
+
   useEffect(() => {
     (async () => {
       try {
         const data: any = await getMyProfile();
         const raw = data.avataar || data.avatar_url || data.avatar;
-        setProfile({ ...data, avataar: toWorkerAvatarUrl(raw) });
+
+        // Stable avatar (NO ?v=Date.now() here)
+        const stable = toWorkerAvatarUrlClean(raw);
+
+        setProfile({ ...data, avataar: stable });
         setImageLoading(true);
       } catch (err) {
         console.error(err);
@@ -258,7 +308,10 @@ export default function UserProfileMobile() {
     })();
   }, []);
 
-  /* ---------------- LOAD POSTS ---------------- */
+  /* -------------------------------------------------------------------------- */
+  /*                                LOAD POSTS                                  */
+  /* -------------------------------------------------------------------------- */
+
   useEffect(() => {
     (async () => {
       setPostsLoading(true);
@@ -270,10 +323,17 @@ export default function UserProfileMobile() {
           .slice()
           .sort(
             (a: UserPost, b: UserPost) =>
-              new Date(b.posted_on).getTime() - new Date(a.posted_on).getTime()
+              new Date(b.posted_on).getTime() -
+              new Date(a.posted_on).getTime()
           );
 
-        setPosts(sorted);
+        // FIXED: assign stable worker URL ONCE
+        const stablePosts = sorted.map((p: UserPost) => ({
+          ...p,
+          workerUrl: toWorkerPostUrlClean(p.picture),
+        }));
+
+        setPosts(stablePosts);
       } catch (err) {
         console.error(err);
       } finally {
@@ -282,7 +342,10 @@ export default function UserProfileMobile() {
     })();
   }, []);
 
-  /* ---------------- CROP LOCK SCROLL ---------------- */
+  /* -------------------------------------------------------------------------- */
+  /*                            CROP SCROLL LOCK                                 */
+  /* -------------------------------------------------------------------------- */
+
   useEffect(() => {
     document.body.style.overflow = isCropOpen ? "hidden" : "";
     return () => {
@@ -294,66 +357,102 @@ export default function UserProfileMobile() {
     setCroppedAreaPixels(px);
   }, []);
 
-  /* ---------------- AVATAR LOAD EVENTS ---------------- */
+  /* -------------------------------------------------------------------------- */
+  /*                              AVATAR LOAD EVENT                              */
+  /* -------------------------------------------------------------------------- */
+
   const handleImgLoad = () => {
     setImageLoading(false);
     setAvatarUpdating(false);
   };
 
-  /* ---------------- POST CLICK SWITCH AVATAR ---------------- */
-  const onPostClick = (p: UserPost) => {
-    const isActive = activePostId === p.id;
+  /* -------------------------------------------------------------------------- */
+  /*                        CLICK POST → SWITCH AVATAR                           */
+  /* -------------------------------------------------------------------------- */
 
-    if (isActive) {
+  const onPostClick = (p: UserPost) => {
+    const active = activePostId === p.id;
+
+    if (active) {
+      // restore avatar
       setActivePostId(null);
+
       if (prevAvatarUrl) {
         setImageLoading(true);
-        const base = prevAvatarUrl.split("?")[0];
-        const restored = `${base}?v=${Date.now()}`;
-        setProfile((pr) => (pr ? { ...pr, avataar: restored } : pr));
+        setProfile((pr) =>
+          pr
+            ? {
+                ...pr,
+                avataar: prevAvatarUrl, // stable url
+              }
+            : pr
+        );
       }
+
       setPrevAvatarUrl(null);
       return;
     }
 
+    // store old avatar
     setPrevAvatarUrl(profile?.avataar ?? null);
 
-    const postUrl = toWorkerPostUrl(p.picture);
+    // switch avatar to post image
     setImageLoading(true);
-    setProfile((pr) => (pr ? { ...pr, avataar: postUrl } : pr));
+    setProfile((pr) =>
+      pr
+        ? {
+            ...pr,
+            avataar: p.workerUrl,
+          }
+        : pr
+    );
 
     setActivePostId(p.id);
   };
 
-  /* ---------------- PAGE LOADING ---------------- */
-  if (loading)
+  /* -------------------------------------------------------------------------- */
+  /*                                LOADING STATES                              */
+  /* -------------------------------------------------------------------------- */
+
+  if (loading) {
     return (
       <div className="flex gap-[0.5rem] items-center justify-center h-screen w-screen bg-black text-white">
-        <div className="animate-pulse text-[1rem] italic">Loading Your Profile</div>
+        <div className="animate-pulse text-[1rem] italic">
+          Loading Your Profile
+        </div>
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          transition={{
+            repeat: Infinity,
+            duration: 1,
+            ease: "linear",
+          }}
           className="w-[0.6rem] h-[0.6rem] border-[0.3rem] border-[#FF5069] border-t-transparent rounded-full"
         />
       </div>
     );
+  }
 
-  if (!profile)
+  if (!profile) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-black text-white">
         Failed to load profile.
       </div>
     );
+  }
 
-  /* ---------------- RENDER ---------------- */
+  /* -------------------------------------------------------------------------- */
+  /*                              MAIN RENDER                                   */
+  /* -------------------------------------------------------------------------- */
+
   return (
     <div className="relative flex flex-col items-center min-w-full min-h-screen overflow-x-hidden overflow-y-auto bg-[#0D0002]">
 
-      {/* -------- TOP HEADER -------- */}
-      <div className="sticky top-0 z-10 w-full">
+      {/* ---------------- TOP HEADER ---------------- */}
+      <div className="sticky top-[0rem] z-10 w-full">
         <div className="relative w-full aspect-[0.8] overflow-hidden rounded-t-[1.25rem]">
 
-          {/* Settings icon */}
+          {/* Settings */}
           <Link
             to="/settings"
             className="absolute top-[0.5rem] left-[0.3rem] bg-[#82817c]/50 px-[0.5rem] pt-[0.5rem] pb-[0.3rem] rounded-full z-[5]"
@@ -361,14 +460,15 @@ export default function UserProfileMobile() {
             <Settings className="h-5 w-5 text-white" />
           </Link>
 
-          {/* Avatar input */}
+          {/* Avatar Input */}
           <input
             type="file"
             id="avatar-upload"
             accept="image/*"
             className="hidden"
             onChange={(e) => {
-              if (e.target.files?.[0]) openCropperForFile(e.target.files[0]);
+              if (e.target.files?.[0])
+                openCropperForFile(e.target.files[0]);
               e.currentTarget.value = "";
             }}
           />
@@ -380,7 +480,7 @@ export default function UserProfileMobile() {
             <Upload className="h-5 w-5 text-white" />
           </label>
 
-          {/* Loading overlay */}
+          {/* Avatar Loading Overlay */}
           {(imageLoading || avatarUpdating) && (
             <img
               src="/profile_loading.png"
@@ -393,20 +493,26 @@ export default function UserProfileMobile() {
           <img
             src={profile.avataar}
             className={`absolute inset-[0rem] w-full h-full object-cover transition-opacity duration-300 ${
-              imageLoading || avatarUpdating ? "opacity-0" : "opacity-100"
+              imageLoading || avatarUpdating
+                ? "opacity-0"
+                : "opacity-100"
             }`}
             onLoad={handleImgLoad}
           />
         </div>
 
-        {/* NAME + EDIT BUTTON */}
+        {/* Name + edit */}
         <div className="relative -mt-[1.2rem]">
           <div className="bg-[#0D0002] rounded-t-[1.5rem] px-[1rem] pt-[1.1rem]">
             <div className="flex items-center justify-between">
-              <h2 className="text-[1.1rem] mx-[1rem] font-bold">{profile.name}</h2>
+              <h2 className="text-[1.1rem] mx-[1rem] font-bold">
+                {profile.name}
+              </h2>
 
               <button
-                onClick={() => navigate("/edit-profile", { state: { profile } })}
+                onClick={() =>
+                  navigate("/edit-profile", { state: { profile } })
+                }
                 className="flex items-center justify-center border-none p-[0.5rem] mr-[0.75rem] bg-[#413839] text-white rounded-full"
               >
                 <Pencil size={24} />
@@ -416,64 +522,80 @@ export default function UserProfileMobile() {
         </div>
       </div>
 
-      {/* -------- DETAILS -------- */}
+      {/* ---------------- DETAILS ---------------- */}
       <div className="bg-[#0D0002] w-full px-[0.5rem] pb-[1.25rem]">
 
         <p className="text-[0.95rem] mx-[1rem] text-white/70 mt-[0.3rem]">
-          {profile.dateOfBirth ? calculateAge(profile.dateOfBirth) : "N/A"}{" "}
+          {profile.dateOfBirth
+            ? calculateAge(profile.dateOfBirth)
+            : "N/A"}{" "}
           {profile.gender}, {profile.personality}
         </p>
 
         {/* Interests */}
         <div className="mt-[0.6rem] flex mx-[1rem] flex-wrap">
           {profile.interests.map((id: number) => {
-            const interest = INTERESTS.find((i) => i.id === id);
+            const entry = INTERESTS.find((i) => i.id === id);
             return (
               <span
                 key={id}
                 className="px-[0.5rem] py-[0.3rem] mx-[0.2rem] my-[0.2rem] text-[0.7rem] rounded-full bg-[#FF5069]"
               >
-                {interest ? interest.name : `Unknown (${id})`}
+                {entry ? entry.name : `Unknown (${id})`}
               </span>
             );
           })}
         </div>
 
         {/* About */}
-        <h3 className="mt-[0.8rem] text-[1.25rem] mx-[1rem] font-semibold">About me</h3>
+        <h3 className="mt-[0.8rem] text-[1.25rem] mx-[1rem] font-semibold">
+          About me
+        </h3>
+
         <p className="mt-[0.4rem] text-[#cccccc] text-[0.95rem] mx-[1rem] leading-relaxed">
           {profile.bio}
         </p>
 
-        {/* -------- QUALIFICATION -------- */}
+        {/* Qualification */}
         <div className="mt-[0.8rem] mx-[1rem]">
-          {/* <h3 className="text-[1.05rem] font-semibold">Qualification</h3> */}
-
           <p className="mt-[0.4rem] text-[#cccccc] text-[0.95rem]">
-            {profile.programme_name || "—"}, {profile.department_name || "—"},
+            {profile.programme_name || "—"},{" "}
+            {profile.department_name || "—"},
           </p>
 
           <p className="text-[#cccccc] text-[0.95rem]">
-            {profile.school_name ? `School of ${profile.school_name}` : ""}
-            {profile.email && (() => {
-              const year = extractJoinYear(profile.email);
-              return year ? `, since ${year}` : "";
+            {profile.school_name
+              ? `School of ${profile.school_name}`
+              : ""}
+            {(() => {
+              const y = extractJoinYear(profile.email);
+              return y ? `, since ${y}` : "";
             })()}
           </p>
         </div>
 
-        {/* -------- POSTS -------- */}
-        <h2 className="mt-[1rem] text-[1.1rem] mx-[1rem] font-semibold">Posts</h2>
+        {/* POSTS */}
+        <h2 className="mt-[1rem] text-[1.1rem] mx-[1rem] font-semibold">
+          Posts
+        </h2>
 
         {postsLoading ? (
-          <p className="mx-[1rem] flex justify-center text-white/60 gap-[0.5rem] mt-[0.5rem]">Loading posts <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="w-[0.6rem] h-[0.6rem] border-[0.3rem] border-[#FF5069] border-t-transparent rounded-full"
-          />
+          <p className="mx-[1rem] flex justify-center text-white/60 gap-[0.5rem] mt-[0.5rem]">
+            Loading posts
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{
+                repeat: Infinity,
+                duration: 1,
+                ease: "linear",
+              }}
+              className="w-[0.6rem] h-[0.6rem] border-[0.3rem] border-[#FF5069] border-t-transparent rounded-full"
+            />
           </p>
         ) : posts.length === 0 ? (
-          <p className="mx-[1rem] text-white/60 mt-[0.5rem]">No posts yet.</p>
+          <p className="mx-[1rem] text-white/60 mt-[0.5rem]">
+            No posts yet.
+          </p>
         ) : (
           <div className="grid grid-cols-3 gap-[0.35rem] mx-[1rem] mt-[0.4rem]">
             {posts.map((p) => {
@@ -490,17 +612,25 @@ export default function UserProfileMobile() {
                     src={
                       postImageStatus[p.id] === "error"
                         ? "/posts_error.png"
-                        : toWorkerPostUrl(p.picture)
+                        : p.workerUrl
                     }
                     alt={p.caption}
                     className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${
-                      postImageStatus[p.id] === "loaded" ? "opacity-100" : "opacity-0"
+                      postImageStatus[p.id] === "loaded"
+                        ? "opacity-100"
+                        : "opacity-0"
                     }`}
                     onLoad={() =>
-                     setPostImageStatus((s) => ({ ...s, [p.id]: "loaded" }))
-                      }
+                      setPostImageStatus((s) => ({
+                        ...s,
+                        [p.id]: "loaded",
+                      }))
+                    }
                     onError={() =>
-                      setPostImageStatus((s) => ({ ...s, [p.id]: "error" }))
+                      setPostImageStatus((s) => ({
+                        ...s,
+                        [p.id]: "error",
+                      }))
                     }
                   />
 
@@ -511,17 +641,14 @@ export default function UserProfileMobile() {
                     />
                   )}
 
-
                   {isActive && (
-                    <div
-                      className="absolute bg-[#0D0002]/90 inset-[0rem] flex flex-col justify-center items-center px-[0.5rem] pb-[0.5rem]"
-                    //   style={{
-                    //     background: "linear-gradient(to top, rgba(0,0,0,0.65), transparent)",
-                    //   }}
-                    >
+                    <div className="absolute bg-[#0D0002]/90 inset-[0rem] flex flex-col justify-center items-center px-[0.5rem] pb-[0.5rem]">
                       <div
                         className="text-white font-semibold"
-                        style={{ fontSize: "0.85rem", lineHeight: "1rem" }}
+                        style={{
+                          fontSize: "0.85rem",
+                          lineHeight: "1rem",
+                        }}
                       >
                         "{p.caption}"
                       </div>
@@ -539,13 +666,12 @@ export default function UserProfileMobile() {
             })}
           </div>
         )}
-
       </div>
 
-      {/* -------- CROPPER MODAL -------- */}
+      {/* CROP MODAL */}
       {isCropOpen && (
         <Portal>
-          <div className="fixed inset-0 bg-black/80 z-[9999] flex flex-col p-[1rem]">
+          <div className="fixed inset-[0px] p-[1rem] bg-[#0D0002] z-[9999] flex flex-col bg-black/80">
             <div className="relative w-full h-[70vh]">
               {pickedUrl && (
                 <Cropper
@@ -560,11 +686,10 @@ export default function UserProfileMobile() {
               )}
             </div>
 
-            <div className="mt-[1rem] flex flex-col gap-[1rem]">
+            <div className="bg-[#0D0002] px-[3rem] pt-[1.5rem] flex flex-col gap-[1.2rem]">
               <button
                 onClick={confirmCropAndUpload}
-                className="text-[1.2rem] py-[0.5rem] rounded-[2rem]"
-                style={{ backgroundColor: "#FF5069" }}
+                className="text-[1.2rem] py-[0.3rem] bg-[#FF5069] rounded-[2rem]"
               >
                 Use Photo
               </button>
@@ -575,8 +700,7 @@ export default function UserProfileMobile() {
                   if (pickedUrl) URL.revokeObjectURL(pickedUrl);
                   setPickedUrl(null);
                 }}
-                className="text-[1.2rem] py-[0.5rem] rounded-[2rem]"
-                style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+                className="text-[1.2rem] py-[0.3rem] bg-white/10 rounded-[2rem]"
               >
                 Cancel
               </button>
