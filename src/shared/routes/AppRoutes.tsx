@@ -158,6 +158,7 @@ import SettingsMobile from "../../mobile/pages/SettingsMobile";
 import ChatListMobile from "../../mobile/pages/ChatsListMobile";
 import ChatRoomMobile from "../../mobile/pages/ChatRoom";
 import EditProfileMobile from "../../mobile/pages/EditProfileMobile";
+import DiscoverUserProfile from "../../mobile/pages/DiscoverUserProfile";
 
 
 export default function AppRoutes() {
@@ -314,6 +315,15 @@ return (
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/discover/profile/:uid"
+        element={
+          <ProtectedRoute>
+            <DiscoverUserProfile />
+          </ProtectedRoute>
+        }
+      />
+
     </Route>
 
     {/* Fallback */}

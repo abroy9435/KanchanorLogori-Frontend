@@ -16,6 +16,7 @@
     "classnames": "^2.5.1",
     "firebase": "^12.1.0",
     "framer-motion": "^12.23.12",
+    "lodash.debounce": "^4.0.8",
     "lottie-react": "^2.4.1",
     "lottie-web": "^5.13.0",
     "lucide-react": "^0.542.0",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@tailwindcss/postcss": "^4.1.11",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^5.0.3",
