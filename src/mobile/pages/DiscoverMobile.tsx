@@ -469,12 +469,19 @@ export default function DiscoverMobile() {
 
             <div className="rounded-lg overflow-hidden bg-[#0D0002] px-[0.2rem] m-[0.7rem] flex items-center justify-center">
               {comingSoonAnim ? (
-                <Lottie
+                <div className="flex px-[0.5rem]">
+                  <Lottie
                   animationData={comingSoonAnim}
                   loop
                   autoplay
                   className="rounded-md"
                 />
+                <div className="text-[#FF5069]  text-[2rem]">
+                  <div>COMING</div>
+                  <div>SOON!</div>
+                </div>
+                </div>
+                
               ) : (
                 <div className="text-white/50 text-sm italic">Loading animation…</div>
               )}
