@@ -34,9 +34,9 @@ export function PostLikeButton({ liked: initialLiked = false, onToggle }: LikeBu
       >
         <Heart
           size={24}
-          fill={liked ? "#FE0000" : "#413839"}
+          fill={liked ? "#1F0004" : "#1F0004"} //change the true state color to #FF0000 when like button is fully functional
           className={`mt-2 px-4 py-2 rounded transition-colors
-          ${liked ? "text-[#FF0000]" : "text-black"} bg-[#413839]`}
+          ${liked ? "text-[#1F0004]" : "text-[#1F0004]"} bg-[#413839]`} //change the true state color to #FF0000 when like button is fully functional
         />
       </button>
     </div>

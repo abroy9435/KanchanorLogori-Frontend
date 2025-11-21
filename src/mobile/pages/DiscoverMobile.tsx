@@ -375,7 +375,7 @@ export default function DiscoverMobile() {
   return (
     <div className="min-h-screen pb-[2rem] bg-[#1F0004] text-white px-[0.3rem]">
       {/* Header */}
-      <div className="pt-6">
+      <div className="pt-[1rem] ml-[0.5rem]">
         <h1 className="text-4xl my-[0rem] pt-[1rem] font-extrabold">
           Discover
         </h1>
@@ -386,7 +386,7 @@ export default function DiscoverMobile() {
 
       {/* Search Bar */}
       <div className="mt-6 relative">
-        <div className="flex items-center gap-[1rem] bg-[#0D0002] rounded-lg px-[1rem] py-[0.3rem] mx-[0.8rem} max-w-screen rounded-[2rem]">
+        <div className="flex items-center gap-[1rem] bg-[#0D0002] rounded-lg px-[1rem] py-[0.3rem] mx-[0.4rem] max-w-screen rounded-[2rem]">
           <Search size={23} />
           <input
             value={query}
@@ -465,7 +465,7 @@ export default function DiscoverMobile() {
         <div>
           {/* Algorithms Banner */}
           <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-4">Matching algorithms</h2>
+            <h2 className="text-2xl font-bold ml-[0.5rem] mb-4">Matching algorithms</h2>
 
             <div className="rounded-lg overflow-hidden bg-[#0D0002] px-[0.2rem] m-[0.7rem] flex items-center justify-center">
               {comingSoonAnim ? (
@@ -475,11 +475,11 @@ export default function DiscoverMobile() {
                   loop
                   autoplay
                   className="rounded-md"
-                />
-                <div className="text-[#FF5069]  text-[2rem]">
-                  <div>COMING</div>
-                  <div>SOON!</div>
-                </div>
+                  />
+                  <div className="text-[#FF5069]  text-semibold text-[2rem]">
+                    <div>COMING</div>
+                    <div>SOON!</div>
+                  </div>
                 </div>
                 
               ) : (
@@ -492,7 +492,7 @@ export default function DiscoverMobile() {
 
           {/* Posts */}
           <div className="mt-10">
-            <h2 className="text-2xl font-bold mb-4">Latest Posts around you</h2>
+            <h2 className="text-2xl ml-[0.5rem] font-bold mb-4">Latest Posts around you</h2>
 
             <div className="space-y-6 bg-[#0D0002] my-[0.5rem] py-[0.9rem] pr-[0.5rem]">
               {posts.map((p) => (

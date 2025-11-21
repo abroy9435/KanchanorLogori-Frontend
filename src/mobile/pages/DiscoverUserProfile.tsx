@@ -345,7 +345,7 @@ export default function DiscoverUserProfile() {
 
               {/* Heart animation */}
               {showHeart && (
-                <div className="absolute inset-0 z-[4] flex items-center justify-center pointer-events-none">
+                <div className="absolute inset-[0rem] z-[4] flex items-center justify-center pointer-events-none">
                   <HeartAnimation trigger={showHeart} size={200} />
                 </div>
               )}

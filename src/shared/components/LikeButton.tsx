@@ -74,8 +74,8 @@ export function LikeButton({ liked: initialLiked = false, onToggle }: LikeButton
          onClick={handleLike}
          className={"flex items-center px-[10px] py-[10px] mr-[0.75rem] ml-[0.5rem] border-none bg-[#413839] rounded-full transition-colors"}
        >
-         <Heart size={24} fill={liked? "#FE0000" : "#413839"} className={`mt-2 px-4 py-2 rounded transition-colors
-         ${liked ? "text-[#FF0000]" : "text-black"} bg-[#413839]`} />
+         <Heart size={24} fill={liked? "#FF0000" : "#1F0004"} className={`mt-2 px-4 py-2 rounded transition-colors
+         ${liked ? "text-[#FF0000]" : "text-[#1F0004]"} bg-[#413839]`} />
       </button>
     </div>
   );
