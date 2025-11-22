@@ -807,13 +807,13 @@ export default function DiscoverMobile() {
     
     {/* Fullscreen overlay while opening profile */}
     {openingProfile && (
-      <div className="fixed inset-[0rem] z-[100] flex items-center justify-center">
+      <div className="fixed inset-[0rem] z-[100] backdrop-blur-[0.5rem] flex items-center justify-center">
         <div className="bg-[#0D0002] px-[2rem] pb-[1.2rem] rounded-[0.8rem] shadow-lg flex flex-col items-center">
             <div className="flex flex-col items-center justify-center mt-[2rem]">
               <img
                 src="/search_undraw.png"
                 alt=""
-                className="w-[11rem] h-[11rem] opacity-80"
+                className="w-[12rem] h-[11rem] opacity-80"
               />
             </div>         
             <div className="animate-pulse flex justify-center gap-[0.5rem] text-white text-[1rem] mt-[0.8rem]">
