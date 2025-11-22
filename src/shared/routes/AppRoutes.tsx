@@ -255,6 +255,14 @@ return (
         </ProtectedRoute>
         } 
     />
+    <Route
+        path="/gate"
+        element={
+          <ProtectedRoute>
+            <GateMobile />
+          </ProtectedRoute>
+        }
+      />
     {/* All other pages inside MobileLayout */}
     <Route element={<MobileLayout />}>
       <Route
@@ -304,14 +312,6 @@ return (
         element={
           <ProtectedRoute>
             <ChatListMobile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/gate"
-        element={
-          <ProtectedRoute>
-            <GateMobile />
           </ProtectedRoute>
         }
       />
