@@ -19,6 +19,7 @@ import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { createLucideIcon, ChevronDown } from "lucide-react";
 // ✅ add uploadAvatar (same helper you use on Profile page)
 import { uploadAvatar } from "../../shared/api";
+import { getMyProfile } from "../../shared/api";
 
 // ------------ icons (converted from the Android VectorDrawable you shared) ------------
 const MaleIcon = ({ active }: { active?: boolean }) => (
@@ -395,28 +396,37 @@ export default function Register() {
   const submit = async () => {
     setErr(null);
     setSaving(true);
-    setBlocking(true); // show overlay while we register + upload avatar
+    setBlocking(true);
+  
     try {
-      // don't send big dataURL to /user/register
-      const { avataar, ...rest } = form as any;
-
-      await registerUser(rest as any);
-
+      const { avataar, looking_for, ...rest } = form;
+      const payload = {
+        ...rest,
+        avataar: "avatars not selected yet",
+        looking_for: looking_for ?? 0,   // <= FIX
+      };
+  
+      console.log("REG PAYLOAD:", payload);
+  
+      await registerUser(payload);
+  
       if (avatarFile) {
-        await uploadAvatar(avatarFile); // multipart upload same as Profile page
-      }
-
-      window.location.href = "/feed";
-    } catch (e: any) {
-      setErr(e?.response?.data?.message || e?.message || "Registration failed");
+        await uploadAvatar(avatarFile);
+      } 
+      window.location.href = "/";
+    } catch (e:any) {
+      setErr(e?.response?.data?.message || e.message);
+      setTimeout(window.location.href = "/", 5000);
     } finally {
       setSaving(false);
-      setBlocking(false); // will unmount overlay if we didn't redirect
+      setBlocking(false);
     }
   };
+  
+  
 
   // ----- progress & gating -----
-  const totalSteps = 6; // 0..5
+  const totalSteps = 7; // 0..5
   const pct = ((step + 1) / totalSteps) * 100;
 
   // block Next/Get Started when current step incomplete
@@ -432,7 +442,9 @@ export default function Register() {
         return !!form.personality;
       case 4: // looking for
         return typeof form.looking_for === "number";
-      case 5: // avatar + bio
+      case 5: // looking for
+        return form.preferred_gender;
+      case 6: // avatar + bio
         return !!form.avataar && form.bio.trim().length > 0;
       default:
         return true;
@@ -447,6 +459,7 @@ export default function Register() {
     form.interests.length,
     form.personality,
     form.looking_for,
+    form.preferred_gender,
     form.avataar,
     form.bio,
   ]);
@@ -502,10 +515,9 @@ export default function Register() {
           {step === 2 && "Choose up-to 4 interests"}
           {step === 3 && "What best describes you?"}
           {step === 4 && "What are you looking for"}
-          {step === 5 && "Almost there!"}
+          {step === 5 && "Preferred Gender"}
+          {step === 6 && "Almost there!"}
         </div>
-
-        {err && <div className="text-red-400 mb-3">{err}</div>} 
 
         {/* STEP 0: identity (name/email + menu-card pickers) */}
         {step === 0 && (
@@ -550,7 +562,7 @@ export default function Register() {
                     className={`flex flex-col items-center gap-1 rounded-2xl p-3 ${
                       active ? "bg-transparent" : "bg-transparent"
                     }`}
-                    onClick={() => setForm(f => ({ ...f, gender: g, preferred_gender: g === "male" ? "female" : "male" }))}
+                    onClick={() => setForm(f => ({ ...f, gender: g }))}
                     type="button"
                   >
                     {g === "male" ? <MaleIcon active={active} /> : <FemaleIcon active={active} />}
@@ -630,10 +642,35 @@ export default function Register() {
           </div>
         )}
 
+        {/* Prefered Gender */}
+        {step === 5 && (
+          <div className="space-y-8">
+            <div className="flex items-center gap-8 justify-center mt-4">
+              {(["male", "female"] as const).map((pg) => {
+                const active = form.preferred_gender === pg;
+                return (
+                  <button
+                    key={pg}
+                    className={`flex flex-col items-center gap-1 rounded-2xl p-3 ${
+                      active ? "bg-transparent" : "bg-transparent"
+                    }`}
+                    onClick={() => setForm(f => ({ ...f, preferred_gender: pg }))}
+                    type="button"
+                  >
+                    {pg === "male" ? <MaleIcon active={active} /> : <FemaleIcon active={active} />}
+                    <span className={active ? "text-[#FF5069]" : "text-[#FF5069]/20"}>{pg[0].toUpperCase() + pg.slice(1)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
         {/* STEP 5 — Final Avatar + Bio Card */}
 
-        {step === 5 && (
+        {step === 6 && (
           <div className="space-y-6">
+            <div className="opacity-50 text-center mx-[1.5rem] mb-[1rem]">Add a photo and tell us about yourself</div>
             {/* PROFILE CARD */}
             <div
               className="px-[1rem] py-[1rem] mx-[1.5rem] mb-[1rem] rounded-[0.9rem] p-[1rem] bg-[#0D0002] flex gap-[1rem] items-center"
@@ -708,7 +745,7 @@ export default function Register() {
               <textarea
                 className="
                 w-full bg-[#0D0002] border border-[#0D0002] border-x-[0.7rem] border-b-[1.2rem]
-                rounded-b-[1rem] h-[2.2rem] p-3 text-white placeholder-gray-400
+                rounded-b-[1rem] h-[4.2rem] p-3 text-white placeholder-gray-400
                 text-[1.1rem] pt-[0.3rem] resize-none focus:border-[#0D0002] focus:ring-0 focus:outline-none
               "
                 placeholder="Tell people what makes you unique!"
@@ -721,7 +758,7 @@ export default function Register() {
             <div className="text-right mx-[2rem] opacity-60">{form.bio.length}/300</div>
             {/* Tip */}
               <div className="flex gap-[0.4rem] mt-[1rem] px-[1rem] items-center justify-center">
-                <div className="bg-[#FF5069] w-[0.8rem] h-[0.8rem] flex items-center justify-center text-[#0D0002] rounded-full">i</div>
+                <div className="bg-[#FF5069] w-[0.5rem] h-[0.5rem] flex px-[0.3rem] py-[0.3rem] text-[1rem] items-center justify-center text-[#0D0002] rounded-full">i</div>
                 <div className="text-[0.7rem] opacity-50">Tip: Profiles with thoughtful photos and bios get 3× more matches!</div>
               </div>
           </div>
@@ -732,26 +769,27 @@ export default function Register() {
       {/* footer nav */}
       <div className="fixed bottom-[3rem] left-[0rem] right-[0rem] px-5 py-4 bg-transparent">
         <div className="flex justify-center gap-3">
-
           {step < totalSteps - 1 ? (
             <button
               type="button"
-              className="px-[8rem] py-[1.4rem] text-[1.2rem] rounded-[2rem] bg-[#FF5069] "
+              className={`px-[8rem] py-[1.4rem] text-[1.2rem] rounded-[2rem] ${canProceed?"bg-[#FF5069]":"bg-[#1A1A1A]"}`}
               onClick={() => setStep((s) => clamp(s + 1, 0, totalSteps - 1))}
               disabled={saving || !canProceed}
             >
               Next
             </button>
           ) : (
-            <button
+            <div className="items-center flex flex-col">
+              {err && err==="Request failed with status code 409" && <div className=" text-[#FF5069] mb-[1rem]">Profile already Exist!</div>}  
+              <button
               type="button"
-              className="px-[6rem] py-[1.4rem] text-[1.2rem] rounded-[2rem] bg-[#FF5069] "
+              className={`px-[6rem] py-[1.4rem] text-[1.2rem] rounded-[2rem] ${canProceed?"bg-[#FF5069]":"bg-[#1A1A1A]"}`}
               onClick={submit}
               disabled={saving || !canProceed}
-              style={{ background: '#FF5069', color: '#FFFFFF' }}
             >
               {saving ? "Creating..." : "Get Started"}
             </button>
+            </div>
           )}
         </div>
       </div>
@@ -886,6 +924,8 @@ export default function Register() {
           </div>
         </div>
       )}
+    
+    
     </div>
   );
 }
