@@ -1,3 +1,4 @@
+//src/shared/utils/age.ts
 export function calculateAge(dob: string | Date | null | undefined): number {
     if (!dob) return 0;
   

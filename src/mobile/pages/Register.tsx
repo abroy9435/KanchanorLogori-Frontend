@@ -1,7 +1,7 @@
 // src/mobile/pages/Register.tsx
 "use client";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
+import Lottie from "lottie-react";
 // keep your existing service imports
 import { registerUser } from "../../shared/services/userService";
 import { getSchools, getProgrammes, getDepartments } from "../../shared/services/optionService";
@@ -13,28 +13,28 @@ import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
 import { getCroppedImageFile } from "../../shared/utils/cropper";
 import Portal from "../../shared/components/portal";
+import { calculateAge } from "../../shared/utils/age";
 
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { createLucideIcon } from "lucide-react";
-
+import { createLucideIcon, ChevronDown } from "lucide-react";
 // ✅ add uploadAvatar (same helper you use on Profile page)
 import { uploadAvatar } from "../../shared/api";
 
 // ------------ icons (converted from the Android VectorDrawable you shared) ------------
 const MaleIcon = ({ active }: { active?: boolean }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden>
+  <svg width="" height="" viewBox="0 0 24 24" aria-hidden>
     <path
       d="M9.5 11c1.93 0 3.5 1.57 3.5 3.5S11.43 18 9.5 18 6 16.43 6 14.5 7.57 11 9.5 11zm0-2C6.46 9 4 11.46 4 14.5S6.46 20 9.5 20s5.5-2.46 5.5-5.5c0-1.16-.36-2.23-.97-3.12L18 7.42V10h2V4h-6v2h2.58l-3.97 3.97c-.88-.61-1.95-.97-3.14-.97z"
-      fill={active ? "#FF5069" : "#FFFFFF"}
+      fill={active ? "#FF5069" : "#FF506933"}
     />
   </svg>
 );
 
 const FemaleIcon = ({ active }: { active?: boolean }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden>
+  <svg width="" height="" viewBox="0 0 24 24" aria-hidden>
     <path
       d="M17.5 9.5C17.5 6.46 15.04 4 12 4S6.5 6.46 6.5 9.5c0 2.7 1.94 4.93 4.5 5.4V17H9v2h2v2h2v-2h2v-2h-2v-2.1c2.56-.47 4.5-2.7 4.5-5.4zM8.5 9.5C8.5 7.57 10.07 6 12 6s3.5 1.57 3.5 3.5S13.93 13 12 13 8.5 11.43 8.5 9.5z"
-      fill={active ? "#FF5069" : "#FFFFFF"}
+      fill={active ? "#FF5069" : "#FF506933"}
     />
   </svg>
 );
@@ -161,13 +161,13 @@ function Wheel({ options, value, onChange, ariaLabel }: { options: (string | num
       aria-label={ariaLabel}
       ref={ref}
       onScroll={onScroll}
-      className="relative h-[12.5rem] w-full overflow-y-scroll scrollbar-none snap-y snap-mandatory"
-      style={{ maskImage: "linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)" }}
+      className="relative h-[11rem] w-full overflow-y-scroll scrollbar-none snap-y snap-mandatory text-[#FF5069] text-[1.5rem]"
+      style={{ maskImage: "linear-gradient(to bottom, transparent, black 58%, black 58%, transparent)" }}
     >
       {/* selection band centered */}
       <div
-        className="pointer-events-none absolute left-0 right-0 border-y"
-        style={{ top: CENTER_OFFSET, height: ITEM_H, borderColor: "#FFFFFF33" }}
+        className="pointer-events-none absolute left-[0rem] right-[0rem] border-y border-transparent"
+        style={{ top: CENTER_OFFSET, height: ITEM_H}}
       />
       {options.map((o) => (
         <div key={String(o)} className="flex items-center justify-center snap-start" style={{ height: ITEM_H }} onClick={() => onChange(o)}>
@@ -202,6 +202,18 @@ export default function Register() {
   // ✅ blocking overlay state + lottie container
   const [blocking, setBlocking] = useState(false);
   const lottieRef = useRef<HTMLDivElement | null>(null);
+
+  //lottie animation
+  const [creatingAccountAnim, setcreatingAccountAnim] = useState<any>(null);
+
+  useEffect(() => {
+    fetch("/createacc_lottie.json")
+      .then((res) => res.json())
+      .then((data) => setcreatingAccountAnim(data))
+      .catch((err) =>
+        console.error("Failed to load Lottie JSON", err)
+      );
+  }, []);
 
   // form (ALL FIELDS EMPTY BY DEFAULT)
   const [form, setForm] = useState<{
@@ -446,23 +458,25 @@ export default function Register() {
   const goBack = () => setStep((s) => clamp(s - 1, 0, totalSteps - 1));
 
   return (
-    <div className="min-h-screen" style={{ background: "#0D0002", color: "#FFFFFF" }}>
-      {/* top bar progress */}
-      <div className="px-4 pt-6">
+    <div className="min-h-screen min-w-screen" style={{ background: "#1F0004", color: "#FFFFFF" }}>
+      {!blocking && (
+        <div className="">
+          {/* top bar progress */}
+      <div className="px-[1rem] pt-[1rem]">
         <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={goBack}
             disabled={step === 0 || saving}
             style={{ fontSize: "1.25rem", color: "#FFFFFF" }}
-            className="opacity-90"
+            className="opacity-90 bg-transparent"
           >
             {/* left chevron */}
             <span style={{ fontSize: "1.7rem" }}>‹</span>
           </button>
 
           <div style={{ flex: 1, padding: "0 1rem" }}>
-            <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: "#FFFFFF22" }}>
+            <div className="h-[0.7rem] w-full rounded-full overflow-hidden" style={{ background: "#360007" }}>
               <div style={{ width: `${pct}%`, height: "100%", background: "#FF5069", transition: "width .25s" }} />
             </div>
           </div>
@@ -470,9 +484,9 @@ export default function Register() {
           <button
             type="button"
             onClick={goNext}
-            disabled={step === totalSteps - 1 || saving}
+            disabled={step === totalSteps - 1 || saving || !canProceed }
             style={{ fontSize: "1.25rem", color: "#FFFFFF" }}
-            className="opacity-90"
+            className="opacity-90 bg-transparent"
           >
             <span style={{ fontSize: "1.7rem" }}>›</span>
           </button>
@@ -482,14 +496,14 @@ export default function Register() {
       {/* step content */}
       <div className="px-5 pb-24">
         {/* header text by step */}
-        <h1 className="text-3xl font-semibold mt-6 mb-4" style={{ fontSize: "1.8rem" }}>
+        <div className="text-[5rem] justify-center flex items-center font-semibold my-[2rem]" style={{ fontSize: "2rem" }}>
           {step === 0 && "Lets confirm your identity"}
           {step === 1 && "Select your gender"}
           {step === 2 && "Choose up-to 4 interests"}
           {step === 3 && "What best describes you?"}
           {step === 4 && "What are you looking for"}
           {step === 5 && "Almost there!"}
-        </h1>
+        </div>
 
         {err && <div className="text-red-400 mb-3">{err}</div>} 
 
@@ -497,26 +511,28 @@ export default function Register() {
         {step === 0 && (
           <div className="space-y-6">
             <div>
-              <div className="text-white/70 text-sm mb-1">Name</div>
-              <div className="px-4 py-3 rounded-xl" style={{ background: "#1F0004" }}>{displayName || "—"}</div>
+              <div className="px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.1rem]">{displayName || "—"}</div>
             </div>
             <div>
-              <div className="text-white/70 text-sm mb-1">Email</div>
-              <div className="px-4 py-3 rounded-xl" style={{ background: "#1F0004" }}>{email || "—"}</div>
+              <div className="px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.1rem]">{email || "—"}</div>
             </div>
 
             {/* Triggers that open the FeedMobile-style sheet */}
-            <div className="space-y-4">
-              <button type="button" className="w-full px-4 py-3 rounded-xl text-left" style={{ background: "#1F0004" }} onClick={() => openSheet("department")}>
-                {form.department_id ? `Department: ${getLabel("department", form.department_id)}` : "Select department"}
+            <div className="space-y-6 flex flex-col ">
+              <div className="px-[1rem] py-[1rem] text-[1.1rem]">Educational Details</div>
+              <button type="button" className="px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] flex justify-between items-center text-[1.1rem]" onClick={() => openSheet("department")}>
+                {form.department_id ? `${getLabel("department", form.department_id)}` : "Select department"}
+                <ChevronDown size={22} className="opacity-70" />
               </button>
 
-              <button type="button" className="w-full px-4 py-3 rounded-xl text-left" style={{ background: "#1F0004" }} onClick={() => openSheet("school")}>
-                {form.school_id ? `School: ${getLabel("school", form.school_id)}` : "Select school"}
+              <button type="button" className="px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] flex justify-between items-center text-[1.1rem]" onClick={() => openSheet("school")}>
+                {form.school_id ? `${getLabel("school", form.school_id)}` : "Select school"}
+                <ChevronDown size={22} className="opacity-70" />
               </button>
 
-              <button type="button" className="w-full px-4 py-3 rounded-xl text-left" style={{ background: "#1F0004" }} onClick={() => openSheet("programme")}>
-                {form.programme_id ? `Programme: ${getLabel("programme", form.programme_id)}` : "Select programme"}
+              <button type="button" className="px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] flex justify-between items-center text-[1.1rem]" onClick={() => openSheet("programme")}>
+                {form.programme_id ? `${getLabel("programme", form.programme_id)}` : "Select programme"}
+                <ChevronDown size={22} className="opacity-70" />
               </button>
             </div>
           </div>
@@ -531,20 +547,21 @@ export default function Register() {
                 return (
                   <button
                     key={g}
-                    className={`flex flex-col items-center gap-2 rounded-2xl p-4 ${active ? "" : ""}`}
+                    className={`flex flex-col items-center gap-1 rounded-2xl p-3 ${
+                      active ? "bg-transparent" : "bg-transparent"
+                    }`}
                     onClick={() => setForm(f => ({ ...f, gender: g, preferred_gender: g === "male" ? "female" : "male" }))}
                     type="button"
-                    style={{ background: active ? "#FF506920" : "#FFFFFF0C", borderRadius: "1rem" }}
                   >
                     {g === "male" ? <MaleIcon active={active} /> : <FemaleIcon active={active} />}
-                    <span style={{ color: active ? "#FF5069" : "#FFFFFF" }}>{g[0].toUpperCase() + g.slice(1)}</span>
+                    <span className={active ? "text-[#FF5069]" : "text-[#FF5069]/20"}>{g[0].toUpperCase() + g.slice(1)}</span>
                   </button>
                 );
               })}
             </div>
 
             <div className="mt-2">
-              <div className="text-xl mb-4">Your date of birth</div>
+              <div className="text-[2.1rem] justify-center flex items-center font-semibold my-[2rem]">Your date of birth</div>
               <div className="grid grid-cols-3 gap-3">
                 <Wheel ariaLabel="Day" options={DAYS} value={dobDay} onChange={(v) => setDobDay(Number(v))} />
                 <Wheel ariaLabel="Month" options={MONTHS} value={dobMonth ? MONTHS[dobMonth - 1] : null} onChange={(v) => setDobMonth(MONTHS.indexOf(String(v)) + 1)} />
@@ -557,8 +574,8 @@ export default function Register() {
         {/* STEP 2: interests (max 4) */}
         {step === 2 && (
           <>
-            <div className="text-white/70 mb-2">These will be used to match you with others</div>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="px-[1rem] mb-[1rem] text-[1.1rem] opacity-60">These will be used to match you with others</div>
+            <div className="flex flex-wrap gap-[0.8rem] mx-[0.7rem] mb-[0.6rem]">
               {INTERESTS.map((i) => {
                 const selected = form.interests.includes(i.id);
                 const full = !selected && form.interests.length >= 4;
@@ -567,34 +584,29 @@ export default function Register() {
                     key={i.id}
                     type="button"
                     onClick={() => toggleInterest(i.id)}
-                    className={`px-4 py-2 rounded-full border transition ${selected ? "" : ""}`}
-                    disabled={full}
-                    style={{
-                      background: selected ? "#FF5069" : "transparent",
-                      borderColor: selected ? "#FF5069" : "#FFFFFF33",
-                      color: "#FFFFFF",
-                      opacity: full ? 0.4 : 1,
-                    }}
+                    className={`px-[0.5rem] py-[0.4rem]  rounded-full !border !border-[#FF5069] text-[1rem] transition
+                    ${selected ? "bg-[#FF5069] !text-[#0D0002]" : `bg-transparent ${full ? "opacity-40" : ""}`}`}
                   >
                     {i.name}
                   </button>
                 );
               })}
             </div>
-            <div className="mt-3 text-sm text-white/60">{form.interests.length}/4 selected</div>
+            <div className="px-[1rem] py-[1rem] text-[0.8rem] opacity-60">{form.interests.length}/4 selected</div>
           </>
         )}
 
         {/* STEP 3: personality */}
         {step === 3 && (
-          <div className="space-y-3 mt-2">
+          <div className="space-y-3 mt-2 flex flex-col">
             {['Introvert', 'Extrovert', 'Ambivert', 'Omnivert'].map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => onChange('personality', p)}
-                className={`w-full text-left px-4 py-3 rounded-xl ${form.personality === p ? '' : ''}`}
-                style={{ background: form.personality === p ? '#FF5069' : '#FFFFFF0C', color: '#FFFFFF' }}
+                className={`px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.2rem] text-left ${
+                  form.personality === p ? "!border !border-[#FF5069] text-[#0D0002] bg-[#FF5069]" : "!border !border-transparent"
+                }`}
               >
                 {p}
               </button>
@@ -604,14 +616,13 @@ export default function Register() {
 
         {/* STEP 4: looking for (→ number) */}
         {step === 4 && (
-          <div className="space-y-3 mt-2">
+          <div className="space-y-3 mt-2 flex flex-col">
             {LOOKING_FOR_OPTIONS.map((opt) => (
               <button
                 key={opt.id}
                 type="button"
                 onClick={() => onChange('looking_for', opt.id)}
-                className={`w-full text-left px-4 py-3 rounded-xl ${form.looking_for === opt.id ? '' : ''}`}
-                style={{ background: form.looking_for === opt.id ? '#FF5069' : '#FFFFFF0C', color: '#FFFFFF' }}
+                className={`px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.2rem] text-left ${form.looking_for === opt.id ? "!border !border-[#FF5069] text-[#0D0002] bg-[#FF5069]" : "!border !border-transparent"}`}
               >
                 {opt.label}
               </button>
@@ -619,78 +630,122 @@ export default function Register() {
           </div>
         )}
 
-        {/* STEP 5: avatar + bio */}
+        {/* STEP 5 — Final Avatar + Bio Card */}
+
         {step === 5 && (
           <div className="space-y-6">
-            <div className="flex items-center gap-4 rounded-2xl p-4" style={{ background: '#FFFFFF0C' }}>
-              <div className="relative w-20 h-20 rounded-full overflow-hidden bg-white/10" style={{ width: '5rem', height: '5rem' }}>
+            {/* PROFILE CARD */}
+            <div
+              className="px-[1rem] py-[1rem] mx-[1.5rem] mb-[1rem] rounded-[0.9rem] p-[1rem] bg-[#0D0002] flex gap-[1rem] items-center"
+            >
+              {/* Avatar */}
+              <label
+                className="relative rounded-full overflow-hidden"
+                style={{ width: "4rem", height: "4rem", background: "#1F0004" }}
+              >
                 {form.avataar ? (
-                  <img src={form.avataar} alt="avatar preview" className="absolute inset-0 w-full h-full object-cover" />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-white/50">+</div>
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="text-white/70 text-sm">Profile photo</div>
-                <label className="inline-block mt-1 px-3 py-2 rounded-xl cursor-pointer" style={{ background: '#FF5069', color: '#FFFFFF' }}>
-                  Upload & Crop
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) openCropperForFile(f);
-                      e.currentTarget.value = "";
-                    }}
+                  <img
+                    src={form.avataar}
+                    alt="avatar preview"
+                    className="absolute inset-[0rem] w-full h-full object-cover"
                   />
-                </label>
+                ) : (
+                  <div className="absolute inset-[0rem] flex items-center justify-center">
+                    <div
+                      className="opacity-60 flex items-center text-[1.5rem]"
+                    >
+                      +
+                    </div>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) openCropperForFile(f);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
+              {/* TEXT INFO */}
+              <div className="flex-1 text-white">
+                {/* NAME */}
+                <div className="text-lg font-semibold">{displayName}</div>
+
+                {/* AGE, GENDER, PERSONALITY */}
+                <div className="text-[0.8rem] text-white/70 mt-[0.2rem]">
+                  {calculateAge(form.dateOfBirth)} {form.gender === "male" ? "Male" : "Female"}, {form.personality}
+                </div>
+
+                {/* INTERESTS (inline tags like screenshot) */}
+                <div className="flex flex-wrap gap-[0.4rem] mt-[0.4rem] text-[0.7rem]">
+                  {form.interests.map((id) => {
+                    const entry = INTERESTS.find((i) => i.id === id);
+                    return (
+                      <span
+                        key={id}
+                        className="px-[0.5rem] py-[0.2rem] rounded-full"
+                        style={{ background: "#1F0004", color: "white" }}
+                      >
+                        {entry ? entry.name : ""}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
+
+              {/* UPLOAD BUTTON */}
+              
             </div>
 
-            <div>
-              <div className="text-white/70 text-sm mb-2">About me</div>
+            {/* ABOUT ME */}
+            <div className="px-[1rem] py-[1rem] text-[1.1rem]">
+                <span>About Me</span>
+              </div>
+            <div className="px-[1rem] py-[1rem] mx-[1.5rem] mb-[1rem] rounded-[0.9rem] p-[1rem] bg-[#0D0002] flex gap-[1rem]">
               <textarea
-                className="w-full h-40 rounded-2xl px-4 py-3"
+                className="
+                w-full bg-[#0D0002] border border-[#0D0002] border-x-[0.7rem] border-b-[1.2rem]
+                rounded-b-[1rem] h-[2.2rem] p-3 text-white placeholder-gray-400
+                text-[1.1rem] pt-[0.3rem] resize-none focus:border-[#0D0002] focus:ring-0 focus:outline-none
+              "
                 placeholder="Tell people what makes you unique!"
                 value={form.bio}
                 maxLength={300}
-                onChange={(e) => onChange('bio', e.target.value)}
-                style={{ background: '#FFFFFF0C', color: '#FFFFFF' }}
+                onChange={(e) => onChange("bio", e.target.value)}
               />
-              <div className="text-right text-xs text-white/50">{form.bio.length}/300</div>
+               
             </div>
+            <div className="text-right mx-[2rem] opacity-60">{form.bio.length}/300</div>
+            {/* Tip */}
+              <div className="flex gap-[0.4rem] mt-[1rem] px-[1rem] items-center justify-center">
+                <div className="bg-[#FF5069] w-[0.8rem] h-[0.8rem] flex items-center justify-center text-[#0D0002] rounded-full">i</div>
+                <div className="text-[0.7rem] opacity-50">Tip: Profiles with thoughtful photos and bios get 3× more matches!</div>
+              </div>
           </div>
         )}
+
       </div>
 
       {/* footer nav */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 py-4" style={{ background: '#0D0002' }}>
-        <div className="flex justify-between gap-3">
-          <button
-            type="button"
-            className="px-5 py-3 rounded-2xl"
-            onClick={() => setStep((s) => clamp(s - 1, 0, totalSteps - 1))}
-            disabled={step === 0 || saving}
-            style={{ background: '#FFFFFF0C', color: '#FFFFFF' }}
-          >
-            Back
-          </button>
+      <div className="fixed bottom-[3rem] left-[0rem] right-[0rem] px-5 py-4 bg-transparent">
+        <div className="flex justify-center gap-3">
 
           {step < totalSteps - 1 ? (
             <button
               type="button"
-              className="px-6 py-3 rounded-2xl"
+              className="px-[8rem] py-[1.4rem] text-[1.2rem] rounded-[2rem] bg-[#FF5069] "
               onClick={() => setStep((s) => clamp(s + 1, 0, totalSteps - 1))}
               disabled={saving || !canProceed}
-              style={{ background: '#FF5069', color: '#FFFFFF' }}
             >
               Next
             </button>
           ) : (
             <button
               type="button"
-              className="px-6 py-3 rounded-2xl"
+              className="px-[6rem] py-[1.4rem] text-[1.2rem] rounded-[2rem] bg-[#FF5069] "
               onClick={submit}
               disabled={saving || !canProceed}
               style={{ background: '#FF5069', color: '#FFFFFF' }}
@@ -700,11 +755,12 @@ export default function Register() {
           )}
         </div>
       </div>
-
+        </div>
+      )}
       {/* Cropper modal */}
       {isCropOpen && (
         <Portal>
-          <div className="fixed inset-0 z-[9999] flex flex-col bg-black/80">
+          <div className="fixed inset-[0px] p-[1rem] bg-[#0D0002] z-[9999] flex flex-col bg-black/80">
             <div className="relative w-full h-[70vh]">
               {pickedUrl && (
                 <Cropper
@@ -720,26 +776,26 @@ export default function Register() {
                   showGrid
                   cropShape="rect"
                   objectFit="cover"
-                  classes={{ containerClassName: "absolute inset-0" }}
+                  // classes={{ containerClassName: "absolute inset-[0rem]" }}
                 />
               )}
             </div>
-            <div className="bg-[#0D0002] p-4 flex justify-between">
+            <div className="bg-[#0D0002] px-[3rem] pt-[1.5rem] flex flex-col gap-[1.2rem]">
+              <button className="text-[1.2rem] py-[0.3rem] bg-[#FF5069] rounded-[2rem]" onClick={confirmCropAndAttach}   disabled={saving}>
+                {saving ? 'Processing...' : 'Use Photo'}
+              </button>
               <button
-                className="px-4 py-2 rounded-xl"
+                className="text-[1.2rem] py-[0.3rem] bg-white/10 rounded-[2rem]"
                 onClick={() => {
                   setIsCropOpen(false);
                   if (pickedUrl) URL.revokeObjectURL(pickedUrl);
                   setPickedUrl(null);
                 }}
                 disabled={saving}
-                style={{ background: '#FFFFFF22', color: '#FFFFFF' }}
               >
                 Cancel
               </button>
-              <button className="px-4 py-2 rounded-xl" onClick={confirmCropAndAttach} disabled={saving} style={{ background: '#FF5069', color: '#FFFFFF' }}>
-                {saving ? 'Processing...' : 'Use Photo'}
-              </button>
+              
             </div>
           </div>
         </Portal>
@@ -754,14 +810,14 @@ export default function Register() {
               type="button"
               aria-label="Close"
               onClick={() => (saving ? null : (setSheetOpen(false), setSheetFor(null)))}
-              className="fixed inset-0 z-[60] bg-[transparent] border-none"
+              className="fixed inset-[0rem] z-[60] bg-[transparent] border-none"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             />
             {/* sheet */}
             <motion.div
-              className="fixed left-0 right-0 bottom-0 z-[61]"
+              className="fixed left-[0rem] right-[0rem] bottom-[0rem] z-[61]"
               variants={sheetVariants}
               initial="hidden"
               animate="visible"
@@ -805,12 +861,30 @@ export default function Register() {
 
       {/* ✅ Blocking Lottie overlay during final submit only */}
       {blocking && (
-        <Portal>
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 select-none">
-            <div className="w-52 h-52" ref={lottieRef} />
-            <div className="absolute bottom-20 text-white/90 text-sm">Creating your account…</div>
+        <div className="fixed inset-[0rem] z-[100] rounded-lg overflow-hidden bg-[#0D0002] px-[0.2rem] flex flex-col items-center justify-center">
+          {creatingAccountAnim ? (
+                <div className="flex px-[0.5rem]">
+                  <Lottie
+                  animationData={creatingAccountAnim}
+                  loop
+                  autoplay
+                  className="rounded-md"
+                  />
+                </div>
+                
+              ) : (
+                <div className="text-white/50 text-sm italic">Loading animation…</div>
+              )}
+          <div className="text-[1.2rem]">Creating your Account
           </div>
-        </Portal>
+          <div className="fixed bottom-[7rem] flex">
+          <img src="datingapp_icon.png" className="w-[3rem] h-[3rem] mt-[0.5rem]"></img>
+        <div className="">
+            <p className="text-[1.5rem] my-[0rem] text-[#FF5069]">Kanchanor Logori</p>
+            <p className="text-[0.9rem] my-[0rem]">Unofficial dating platform TezU</p>
+        </div>
+          </div>
+        </div>
       )}
     </div>
   );
