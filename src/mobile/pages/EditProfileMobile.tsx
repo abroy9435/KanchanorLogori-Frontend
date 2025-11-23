@@ -415,7 +415,7 @@ export default function EditProfileMobile() {
           <p className="text-[1.3rem] mx-[1rem]">Your Preferred gender</p>
           <div className="flex justify-center items-center gap-[1rem]">
             {(["male", "female"] as const).map((k) => {
-              const active = gender === k;
+              const active = preferred_gender === k;
               return (
                 <button
                   key={k}
