@@ -71,7 +71,7 @@
 //     </div>
 //   );
 // }
-
+//src/mobile/layout/MobileLayout
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -120,6 +120,17 @@ export default function MobileLayout() {
     setX(activeIndex * 100);
   }, [activeIndex]);
 
+  useEffect(() => {
+    // wait for outlet to render
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "instant" // or "auto"
+      });
+    }, 0);
+  }, [location.pathname]);
+    
+
   // optional: keep bubble aligned on rotate/resize
   useEffect(() => {
     const onResize = () => setX(activeIndex * 100);
@@ -130,7 +141,11 @@ export default function MobileLayout() {
   return (
     <div className="min-h-screen w-full bg-[#0D0002] text-white flex flex-col">
       {/* Main scrollable content */}
-      <div className="flex-1 min-w-screen overflow-x-hidden overflow-y-auto pb-[5rem]">
+      <div
+        id="mobile-scroll"
+        className="flex-1 min-w-screen overflow-x-hidden overflow-y-auto pb-[5rem]"
+      >
+
         <Outlet />
       </div>
 

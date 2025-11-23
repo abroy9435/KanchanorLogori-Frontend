@@ -30,7 +30,7 @@ a {
 }
 
 body {
-  /* margin: 1.5rem; */
+  margin-left: 0rem;
   display: flex;
   place-items: center;
   -ms-overflow-style: none;  /* IE/Edge */
@@ -43,6 +43,12 @@ h1 {
   font-size: 2.2em;
   line-height: 1.1;
 }
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 
 /* button {
   border-radius: 50px;

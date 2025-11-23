@@ -176,7 +176,7 @@ function SignupOverlay({
 }) {
   return (
     <div className="fixed inset-[0rem] backdrop-blur-[0.5rem] flex items-center justify-center z-[9999]">
-      <div className="bg-[#1F0004] rounded-[1rem] w-[85%] max-w-[22rem] p-[1rem] shadow-2xl text-center animate-fadeIn">
+      <div className="bg-[#1F0004] rounded-[1rem] w-[85%] max-w-[20rem] p-[1.2rem] shadow-2xl text-center animate-fadeIn">
         <div className="text-white text-[1.3rem] mb-[1rem]">Create Account</div>
 
         <input

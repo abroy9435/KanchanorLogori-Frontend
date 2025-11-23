@@ -124,6 +124,9 @@ export const uploadPost = (file: File, caption: string) => {
 export const getPosts = (target?: string) =>
   api.get<UserPost[]>("/posts/all", { params: { target } });
 
+export const deleteUserPost = (postId: number) =>
+  api.delete(`/posts/delete/${postId}`);
+
 export const getRandomProfiles = () =>
   api.post<UserProfileOnReceive[]>("/discover/random").then((r) => r.data);
 

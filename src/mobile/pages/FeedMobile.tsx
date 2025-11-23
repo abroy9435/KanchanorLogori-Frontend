@@ -473,7 +473,7 @@ export default function FeedMobile() {
                 />
               </p>
             ) : postsForProfile.length === 0 ? (
-              <p className="mx-[0rem] min-h-screen flex justify-center text-white/60 mt-[0.5rem]">No posts yet.</p>
+              <p className="mx-[0rem] flex justify-center text-white/60 mt-[0.5rem]">No posts yet.</p>
             ) : (
               <div className="grid grid-cols-3 gap-[0.35rem] mt-[0.4rem]">
                 {postsForProfile.map((p) => {

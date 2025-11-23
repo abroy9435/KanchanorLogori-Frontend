@@ -1,12 +1,14 @@
 // src/mobile/pages/ProfileMobile.tsx
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   getMyProfile,
   uploadAvatar,
   getPosts as apiGetPosts,
+  deleteUserPost,           // <-- ADD THIS
 } from "../../shared/api";
+
 import type { UserProfileOnReceive } from "../../shared/types";
 import { Settings, Upload, Pencil } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,6 +21,21 @@ import Portal from "../../shared/components/portal";
 import { useToast } from "../../shared/components/Toast";
 import { motion } from "framer-motion";
 
+// SP-A Spinner (universal)
+function Spinner() {
+  return (
+    <div className="flex justify-center">
+      <motion.div 
+    animate={{ rotate: 360 }}
+      transition={{
+      repeat: Infinity,
+      duration: 1,
+      ease: "linear",
+    }}
+    className="w-[1rem] h-[1rem] border-2 border-white border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 /* -------------------------------------------------------------------------- */
 /*                                WORKER BASE                                 */
 /* -------------------------------------------------------------------------- */
@@ -190,8 +207,15 @@ export default function UserProfileMobile() {
     null
   );
 
+    // Delete overlay state
+  const [showDeleteOverlay, setShowDeleteOverlay] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const [prevAvatarUrl, setPrevAvatarUrl] =
     useState<string | null>(null);
+
+  const timeoutRef = useRef<any>(null);
 
   const navigate = useNavigate();
   const { push } = useToast();
@@ -447,7 +471,7 @@ export default function UserProfileMobile() {
   if (!profile) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-black text-white">
-        Failed to load profile.
+        Failed to load profile. Please Reload
       </div>
     );
   }
@@ -506,16 +530,23 @@ export default function UserProfileMobile() {
             />
           )}
 
-          {/* Avatar */}
+          {/* Avatar Image (fixed, guaranteed load event) */}
           <img
-            src={profile.avataar}
+            key={profile.avataar}                                 // <-- forces a new <img> on each avatar change
+            src={profile.avataar + `?cb=${Date.now()}`}           // <-- unique each time so onLoad ALWAYS fires
             className={`absolute inset-[0rem] w-full h-full object-cover transition-opacity duration-300 ${
-              imageLoading || avatarUpdating
-                ? "opacity-0"
-                : "opacity-100"
+              imageLoading || avatarUpdating ? "opacity-0" : "opacity-100"
             }`}
-            onLoad={handleImgLoad}
+            onLoad={() => {
+              setImageLoading(false);
+              setAvatarUpdating(false);
+            }}
+            onError={() => {
+              console.warn("Avatar failed to load:", profile.avataar);
+              setImageLoading(false);
+            }}
           />
+
         </div>
 
         {/* Name + edit */}
@@ -615,7 +646,7 @@ export default function UserProfileMobile() {
             />
           </p>
         ) : posts.length === 0 ? (
-          <p className="mx-[0rem] min-h-screen flex justify-center text-white/60 mt-[0.5rem]">
+          <p className="mx-[0rem] flex justify-center text-white/60 mt-[0.5rem]">
             No posts yet.
           </p>
         ) : (
@@ -626,9 +657,28 @@ export default function UserProfileMobile() {
               return (
                 <div
                   key={p.id}
-                  onClick={() => onPostClick(p)}
                   className="relative rounded overflow-hidden bg-black/10"
                   style={{ aspectRatio: "1 / 1" }}
+
+                  // --- LONG PRESS START ---
+                  onTouchStart={() => {
+                    timeoutRef.current = setTimeout(() => {
+                      setPostToDelete(p.id);
+                      setShowDeleteOverlay(true);
+                    }, 650); // long-press duration
+                  }}
+                  onTouchEnd={() => {
+                    clearTimeout(timeoutRef.current);
+                  }}
+                  onTouchMove={() => {
+                    clearTimeout(timeoutRef.current); // cancel if user scrolls
+                  }}
+                  onClick={() => {
+                    // Only trigger the post-preview click if NOT long-press
+                    clearTimeout(timeoutRef.current);
+                    onPostClick(p);
+                  }}
+                  // --- LONG PRESS END ---
                 >
                   <img
                     src={
@@ -730,6 +780,50 @@ export default function UserProfileMobile() {
           </div>
         </Portal>
       )}
+
+      {/* DELETE POST OVERLAY */}
+      {showDeleteOverlay && (
+        <div className="fixed inset-[0rem] backdrop-blur-[0.5rem] flex items-center justify-center z-[9999]">
+          <div className="bg-[#1F0004] rounded-[1rem] w-[85%] max-w-[20rem] p-[1.2rem] shadow-2xl text-center animate-fadeIn">
+
+            <div className="text-white text-[1.15rem] mb-[1rem] leading-relaxed">
+              Do you want to delete this post?
+            </div>
+
+            <button
+              onClick={async () => {
+                if (!postToDelete) return;
+                setDeleting(true);
+                try {
+                  await deleteUserPost(postToDelete);
+                  setPosts((arr) => arr.filter(p => p.id !== postToDelete));
+                  setShowDeleteOverlay(false);
+                } catch (err) {
+                  console.error(err);
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+              disabled={deleting}
+              className="w-[13rem] bg-[#FF5069] text-white px-[1.5rem] py-[0.8rem] text-[1rem] rounded-full shadow-md my-[0.5rem]"
+            >
+              {deleting ? <Spinner /> : "Delete"}
+            </button>
+
+            <button
+              onClick={() => {
+                setShowDeleteOverlay(false);
+                setPostToDelete(null);
+              }}
+              className="w-[13rem] bg-[#1A1A1A] text-white px-[1.5rem] py-[0.8rem] text-[1rem] rounded-full shadow-md my-[0.5rem]"
+            >
+              Cancel
+            </button>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

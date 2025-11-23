@@ -123,7 +123,7 @@ export default function PostMobile() {
         if (finalFile && finalPreview && caption.trim() !== "") {
           navigate("/feed", { replace: true });
         } else {
-          navigate(0);
+          navigate("/feed");
         }
       }, 2000);
 
