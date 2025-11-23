@@ -384,6 +384,7 @@ const prevProfile = () => {
                 prevProfile();
               }
             }}
+            dragSnapToOrigin 
             whileDrag={{ rotate: 2, scale: 0.995 }}
           >
             <div className="relative w-full aspect-[3.3] overflow-hidden rounded-t-[1.25rem]">
@@ -433,6 +434,7 @@ const prevProfile = () => {
               prevProfile();
             }
           }}
+          dragSnapToOrigin 
           whileDrag={{ rotate: direction === 1 ? -2 : 2, scale: 0.995 }}
           transition={{ type: "spring", stiffness: 260, damping: 22 }}
         >
