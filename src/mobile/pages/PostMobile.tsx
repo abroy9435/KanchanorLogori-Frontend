@@ -101,7 +101,7 @@ export default function PostMobile() {
 
       await uploadPost(finalFile, caption.trim());
 
-      push({ message: "Post uploaded ✅", variant: "success" });
+      push({ message: "Post uploaded", variant: "success" });
       
       // ✅ Show success pop
       setShowSuccess(true);
@@ -116,11 +116,16 @@ export default function PostMobile() {
         setShowSuccess(false);
       }, 2000);
 
-      if(finalFile!=null && finalPreview!=null && caption!=""){
-        navigate("/", { replace: true });
-      } else{
-        navigate("/");
-      }
+      // Show success popup for 2 seconds, THEN navigate
+      setTimeout(() => {
+        setShowSuccess(false);
+
+        if (finalFile && finalPreview && caption.trim() !== "") {
+          navigate("/feed", { replace: true });
+        } else {
+          navigate(0);
+        }
+      }, 2000);
 
     } catch (err) {
       console.error(err);

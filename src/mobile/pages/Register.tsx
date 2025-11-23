@@ -767,7 +767,7 @@ export default function Register() {
       </div>
 
       {/* footer nav */}
-      <div className="fixed bottom-[3rem] left-[0rem] right-[0rem] px-5 py-4 bg-transparent">
+      <div className="absolute bottom-[3rem] left-[0rem] right-[0rem] px-5 py-4 bg-transparent">
         <div className="flex justify-center gap-3">
           {step < totalSteps - 1 ? (
             <button
