@@ -1,6 +1,6 @@
 // src/mobile/pages/FeedMobile.tsx
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   getRandomProfiles,
@@ -144,6 +144,10 @@ export default function FeedMobile() {
   const [profiles, setProfiles] = useState<UserProfileToShow[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const lastTapRef = useRef<number>(0);
+  const tapTimeoutRef = useRef<any>(null);
+
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showHeart, setShowHeart] = useState(false);
   const [direction, setDirection] = useState<1 | -1>(1);
@@ -193,25 +197,33 @@ export default function FeedMobile() {
 
   // fetch posts for the visible profile whenever currentIndex or profiles change
   useEffect(() => {
+    // If we are out of profiles, stop everything and show the "no more" card
+    if (currentIndex >= profiles.length) {
+      setPostsForProfile([]);
+      return;
+    }
+  
     (async () => {
       const p = profiles[currentIndex];
       if (!p?.uid) {
         setPostsForProfile([]);
         return;
       }
-
+  
       setPostsLoading(true);
       try {
-        // apiGetPosts supports query param target=<uid>
-        const res: any = await apiGetPosts(p.uid); // ensure backend helper attaches ?target=uid
+        const res: any = await apiGetPosts(p.uid);
         const arr = Array.isArray(res) ? res : res.data ?? [];
-        const sorted = (arr as UserPost[]).slice().sort((a, b) => new Date(b.posted_on).getTime() - new Date(a.posted_on).getTime());
-
-        // assign stable worker urls ONCE
+  
+        const sorted = (arr as UserPost[])
+          .slice()
+          .sort((a, b) => new Date(b.posted_on).getTime() - new Date(a.posted_on).getTime());
+  
         const stablePosts = sorted.map((pst) => ({
           ...pst,
           workerUrl: toWorkerPostUrlClean(pst.picture),
         }));
+  
         setPostsForProfile(stablePosts);
         setPostImageStatus({});
       } catch (err) {
@@ -222,19 +234,37 @@ export default function FeedMobile() {
       }
     })();
   }, [currentIndex, profiles]);
+  
 
-  const handleLike = async (profileId: string) => {
+  const handleLike = async (profileId: string): Promise<boolean> => {
+    // trigger big heart exactly like double tap
+    setShowHeart(true);
+    setTimeout(() => setShowHeart(false), 1000);
     try {
-      setShowHeart(true);
       await setLike({ likes: [profileId] });
+  
       setProfiles((prev) =>
-        prev.map((p, i) => (i === currentIndex ? { ...p, has_liked: true } : p))
+        prev.map((p, i) =>
+          i === currentIndex ? { ...p, has_liked: true } : p
+        )
       );
-      setTimeout(() => setShowHeart(false), 1200);
+      
+      // ⭐ AUTO NEXT after liking
+    setTimeout(() => {
+      if (currentIndex < profiles.length - 1) {
+        setDirection(1);
+        setCurrentIndex(i => i + 1);
+      }
+    }, 200); // Play animation first
+
+      return true;   // IMPORTANT 👍 success
     } catch (err) {
       console.error("Error liking profile", err);
+      return false;  // IMPORTANT 👎 rollback
     }
   };
+  
+  
 
   const handleBlock = async (uid: string) => {
     setRelationBusy(true);
@@ -266,14 +296,45 @@ export default function FeedMobile() {
     }
   };
 
+  const handleDoubleTap = async () => {
+    const now = Date.now();
+  
+    if (now - lastTapRef.current < 250) {
+      // DOUBLE TAP detected
+  
+      if (!profile.has_liked) {
+        // trigger heart animation
+        setShowHeart(true);
+        setTimeout(() => setShowHeart(false), 1000);
+
+  
+        // call LikeButton's logic indirectly
+        const success = await handleLike(profile.uid);
+  
+        if (success) {
+          // update UI instantly
+          setProfiles((prev) =>
+            prev.map((p, i) =>
+              i === currentIndex ? { ...p, has_liked: true } : p
+            )
+          );
+        }
+      }
+    }
+  
+    lastTapRef.current = now;
+  };
+  
   const nextProfile = () => {
-    setDirection(1);
-    setCurrentIndex((prev) => Math.min(prev + 1, profiles.length));
-  };
-  const prevProfile = () => {
-    setDirection(-1);
-    setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  };
+  setDirection(1);
+  setCurrentIndex((prev) => prev + 1);   // allow going to length
+};
+
+const prevProfile = () => {
+  setDirection(-1);
+  setCurrentIndex((prev) => Math.max(prev - 1, 0));
+};
+
 
   // HANDLE POST CLICK: toggle avatar to post image (same logic as Profile)
   const onPostClick = (p: UserPost) => {
@@ -376,8 +437,12 @@ export default function FeedMobile() {
           transition={{ type: "spring", stiffness: 260, damping: 22 }}
         >
           {/* ===== Sticky top block: Avatar + Header (name + like) ===== */}
-          <div className="sticky top-0 z-10">
-            <div className="relative w-full aspect-[0.8] overflow-hidden rounded-t-[1.25rem]">
+          <div className="sticky top-[0rem] z-10">
+            <div 
+              className="relative w-full aspect-[0.8] overflow-hidden rounded-t-[1.25rem]"
+              onTouchStart={handleDoubleTap}
+            
+            >
               <button onClick={() => setSheetOpen(true)} className="absolute top-[1.25rem] right-[0.75rem] border-none bg-[#82817c]/50 py-[0.25rem] rounded-full z-[5]">
                 <MoreVertical className="w-full text-white" />
               </button>
@@ -408,7 +473,10 @@ export default function FeedMobile() {
               <div className="bg-[#0D0002] rounded-t-[1.5rem] px-[1rem] pt-[1.1rem] ">
                 <div className="flex items-center justify-between">
                   <h2 className="text-[1.1rem] mx-[1rem] font-bold leading-tight">{profile.name}</h2>
-                  <LikeButton liked={profile.has_liked} onToggle={() => handleLike(profile.uid)} />
+                  <LikeButton
+                    liked={profile.has_liked}
+                    onToggle={() => handleLike(profile.uid)}
+                  />
                 </div>
               </div>
             </div>
@@ -416,44 +484,49 @@ export default function FeedMobile() {
 
           {/* ===== Scrollable details (behind sticky header) ===== */}
           <div className="bg-[#0D0002] px-[2rem] pb-[1.25rem]">
-            {/* Age/Gender/Personality row */}
-            <p className="text-[0.95rem] text-white/70">
-              {calculateAge(profile.dateOfBirth)} {profile.gender}, {profile.personality}
-            </p>
-
-            {/* --- LOOKING FOR: placed directly under the age row to match screenshot --- */}
-            <p className="text-[0.95rem] text-white/90 mt-[0.25rem]">
-              Looking for {lookingForText}
-            </p>
-
-            {/* interests */}
-            <div className="mt-[0.6rem] flex flex-wrap">
-              {profile.interests.map((interest) => (
-                <span key={interest} className="px-[8px] py-[5px] mx-[3px] my-[3px] text-xs rounded-full bg-[#FF5069]">
-                  {interest}
-                </span>
-              ))}
-            </div>
-
-            {/* About me */}
-            <h3 className="mt-[0.8rem] text-[1.25rem] font-semibold">About me</h3>
-            <p className="mt-[0.4rem] text-gray-300 text-[0.95rem] leading-relaxed">
-              {profile.bio}
-            </p>
-
-            {/* Education / since */}
-            <div className="mt-[0.8rem]">
-              <p className="mt-[0.4rem] text-[#cccccc] text-[0.95rem]">
-                {profile.programme_name || "—"},{" "}{profile.department_name || "—"},
+            <div 
+              className=""
+              onTouchStart={handleDoubleTap}
+            >
+                {/* Age/Gender/Personality row */}
+              <p className="text-[0.95rem] text-white/70">
+                {calculateAge(profile.dateOfBirth)} {profile.gender}, {profile.personality}
               </p>
 
-              <p className="text-[#cccccc] text-[0.95rem]">
-                {profile.school_name ? `School of ${profile.school_name}` : ""}
-                {(() => {
-                  const y = extractJoinYear(profile.email);
-                  return y ? `, since ${y}` : "";
-                })()}
+              {/* --- LOOKING FOR: placed directly under the age row to match screenshot --- */}
+              <p className="text-[0.95rem] text-white/90 mt-[0.25rem]">
+                Looking for {lookingForText}
               </p>
+
+              {/* interests */}
+              <div className="mt-[0.6rem] flex flex-wrap">
+                {profile.interests.map((interest) => (
+                  <span key={interest} className="px-[8px] py-[5px] mx-[3px] my-[3px] text-xs rounded-full bg-[#FF5069]">
+                    {interest}
+                  </span>
+                ))}
+              </div>
+
+              {/* About me */}
+              <h3 className="mt-[0.8rem] text-[1.25rem] font-semibold">About me</h3>
+              <p className="mt-[0.4rem] text-gray-300 text-[0.95rem] leading-relaxed">
+                {profile.bio}
+              </p>
+
+              {/* Education / since */}
+              <div className="mt-[0.8rem]">
+                <p className="mt-[0.4rem] text-[#cccccc] text-[0.95rem]">
+                  {profile.programme_name || "—"},{" "}{profile.department_name || "—"},
+                </p>
+
+                <p className="text-[#cccccc] text-[0.95rem]">
+                  {profile.school_name ? `School of ${profile.school_name}` : ""}
+                  {(() => {
+                    const y = extractJoinYear(profile.email);
+                    return y ? `, since ${y}` : "";
+                  })()}
+                </p>
+              </div>
             </div>
 
             {/* Posts */}

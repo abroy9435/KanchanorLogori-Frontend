@@ -90,6 +90,7 @@ export default function EditProfileMobile() {
   const [interests, setInterests] = useState<number[]>([]);
   const [personality, setPersonality] = useState("");
   const [lookingFor, setLookingFor] = useState<number | null>(null);
+  const [preferred_gender, setPreferredGender] = useState<"" | "male" | "female">("");
 
   const [bio, setBio] = useState("");
 
@@ -398,12 +399,35 @@ export default function EditProfileMobile() {
             ))}
           </div>
         </div>
+        
+        {/* prefered gender */}
+        <div className="space-y-3 mb-[1.5rem]">
+          <p className="text-[1.3rem] mx-[1rem]">Your Preferred gender</p>
+          <div className="flex justify-center items-center gap-[1rem]">
+            {(["male", "female"] as const).map((k) => {
+              const active = gender === k;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setPreferredGender(k)}
+                  className={`flex flex-col items-center gap-1 rounded-2xl p-3 ${
+                    active ? "bg-transparent" : "bg-transparent"
+                  }`}
+                >
+                  {k === "male" ? <MaleIcon active={active} /> : <FemaleIcon active={active} />}
+                  <span className={active ? "text-[#FF5069]" : "text-[#FF5069]/20"}>{k[0].toUpperCase() + k.slice(1)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Bio */}
         <div>
-          <div className="ext-[1.3rem] mx-[1rem] mb-[0.2rem]">About you</div>
+          <div className="text-[1.3rem] mx-[1rem] mb-[0.2rem]">About you</div>
           <textarea
-            className="w-[20rem] h-[3rem] px-[0.5rem] py-[0.5rem] mx-[0.7rem] rounded-[0.2rem] bg-[#0D0002] border-transparent"
+            className="w-[21rem] h-[3rem] px-[0.5rem] py-[0.9rem] mx-[0.7rem] text-[1rem] rounded-[0.2rem] bg-[#0D0002] border-transparent"
             placeholder="Tell people what makes you unique!"
             value={bio}
             maxLength={300}
