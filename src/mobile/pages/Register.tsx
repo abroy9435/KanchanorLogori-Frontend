@@ -218,6 +218,7 @@ export default function Register() {
 
   // form (ALL FIELDS EMPTY BY DEFAULT)
   const [form, setForm] = useState<{
+    name: string;
     school_id: number;
     programme_id: number;
     department_id: number;
@@ -230,6 +231,7 @@ export default function Register() {
     bio: string;
     avataar: string;
   }>({
+    name: "",
     school_id: 0,
     programme_id: 0,
     department_id: 0,
@@ -523,7 +525,13 @@ export default function Register() {
         {step === 0 && (
           <div className="space-y-6">
             <div>
-              <div className="px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.1rem]">{displayName || "—"}</div>
+              <textarea 
+              className="px-[1rem] pt-[1rem] w-[21rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.1rem] border-transparent items-cente focus:border-[#0D0002] focus:ring-0 focus:outline-none"
+              placeholder="Name"
+                value={form.name}
+                maxLength={20}
+                onChange={(e) => onChange("name", e.target.value)}
+                />
             </div>
             <div>
               <div className="px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.1rem]">{email || "—"}</div>
