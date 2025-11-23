@@ -1,6 +1,6 @@
 {
     "name": "Kanchanor Logori",
-    "short_name": "KL Dating",
+    "short_name": "Kanchanor Logori",
     "start_url": "/?source=pwa",
     "scope": "/",
     "display": "standalone",
