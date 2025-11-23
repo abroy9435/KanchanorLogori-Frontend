@@ -162,7 +162,7 @@ function Wheel({ options, value, onChange, ariaLabel }: { options: (string | num
       aria-label={ariaLabel}
       ref={ref}
       onScroll={onScroll}
-      className="relative h-[11rem] w-full overflow-y-scroll scrollbar-none snap-y snap-mandatory text-[#FF5069] text-[1.5rem]"
+      className="relative h-[11rem] w-full overflow-y-scroll scrollbar-none snap-y snap-mandatory text-[#FF5069] text-[1.5rem] mb-[5rem]"
       style={{ maskImage: "linear-gradient(to bottom, transparent, black 58%, black 58%, transparent)" }}
     >
       {/* selection band centered */}
@@ -767,7 +767,7 @@ export default function Register() {
       </div>
 
       {/* footer nav */}
-      <div className="absolute bottom-[3rem] left-[0rem] right-[0rem] px-5 py-4 bg-transparent">
+      <div className="fixed bottom-[3rem] left-[0rem] right-[0rem] px-5 py-4 bg-transparent">
         <div className="flex justify-center gap-3">
           {step < totalSteps - 1 ? (
             <button
