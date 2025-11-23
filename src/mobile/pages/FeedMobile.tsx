@@ -485,7 +485,7 @@ const prevProfile = () => {
           </div>
 
           {/* ===== Scrollable details (behind sticky header) ===== */}
-          <div className="bg-[#0D0002] px-[2rem] pb-[1.25rem]">
+          <div className="bg-[#0D0002] px-[1rem] pb-[1.25rem]">
             <div 
               className=""
               onTouchStart={handleDoubleTap}
