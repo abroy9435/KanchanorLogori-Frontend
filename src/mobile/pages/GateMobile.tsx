@@ -183,8 +183,13 @@ export default function GateMobile() {
   if (status === "loading") {
     return (
       <div className="min-w-screen fixed inset-[0rem]">
-        <div className="text-white p-8 flex justify-center items-center w-screen h-screen">
-          Checking your profile…
+        <div className="text-white p-8 flex gap-[0.7rem] justify-center items-center w-screen h-screen italic">
+          Checking your profile
+          <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              className="w-[0.7rem] h-[0.7rem] border-[0.3rem] border-[#FF5069] border-t-transparent rounded-full"
+            />
         </div>
       </div>
     );

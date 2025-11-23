@@ -124,6 +124,8 @@ export default function DiscoverMobile() {
   const [page, setPage] = useState(1);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [initialLoadingPosts, setInitialLoadingPosts] = useState(true);
+
 
   const myUidRef = useRef<string | null>(null);
 
@@ -300,6 +302,7 @@ export default function DiscoverMobile() {
   };
 
   // POSTS (Infinite scroll)
+  // POSTS (Infinite scroll)
   const loadPosts = useCallback(
     async (pg: number) => {
       if (loadingPosts || !hasMorePosts) return;
@@ -308,6 +311,9 @@ export default function DiscoverMobile() {
       try {
         const data: any = await discoverGetFeedPosts(pg);
         const arr = Array.isArray(data) ? data : [];
+
+        // ⬅️ ADD THIS
+        if (pg === 1) setInitialLoadingPosts(false);
 
         if (arr.length === 0) {
           setHasMorePosts(false);
@@ -326,7 +332,6 @@ export default function DiscoverMobile() {
             workerUrl: toWorkerPostUrlClean(p.picture),
           }));
 
-          // prevent duplicates
           setPosts((prev) => {
             const map = new Map(prev.map((p) => [p.post_id, p]));
             cleaned.forEach((p) => map.set(p.post_id, p));
@@ -343,6 +348,7 @@ export default function DiscoverMobile() {
     },
     [loadingPosts, hasMorePosts]
   );
+
 
   useEffect(() => {
     loadPosts(page);
@@ -494,7 +500,8 @@ export default function DiscoverMobile() {
           <div className="mt-10">
             <h2 className="text-2xl ml-[0.5rem] font-bold mb-4">Latest Posts around you</h2>
 
-            <div className="space-y-6 bg-[#0D0002] my-[0.5rem] py-[0.9rem] pr-[0.5rem]">
+            {!initialLoadingPosts && (
+              <div className="space-y-6 bg-[#0D0002] my-[0.5rem] py-[0.9rem] pr-[0.5rem]">
               {posts.map((p) => (
                 <div key={p.post_id} className="bg- rounded-lg overflow-hidden">
                   <div className="flex items-center px-4 py-3">
@@ -558,6 +565,7 @@ export default function DiscoverMobile() {
                 </div>
               ))}
             </div>
+            )}
 
             {loadingPosts && (
                 <div className="flex gap-[0.5rem] items-center justify-center bg-black text-white">

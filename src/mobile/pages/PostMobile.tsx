@@ -117,9 +117,9 @@ export default function PostMobile() {
       }, 2000);
 
       if(finalFile!=null && finalPreview!=null && caption!=""){
-        navigate("/post", { replace: true });
+        navigate("/", { replace: true });
       } else{
-        navigate(0);
+        navigate("/");
       }
 
     } catch (err) {

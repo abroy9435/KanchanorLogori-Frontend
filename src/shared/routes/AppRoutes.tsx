@@ -139,11 +139,11 @@ import { useDevice } from "../hooks/useDevice";
 
 // Desktop pages
 import LoginDesktop from "../../desktop/pages/Login";
-import FeedDesktop from "../../desktop/pages/feed";
-import DiscoverDesktop from "../../desktop/pages/discover";
-import PostDesktop from "../../desktop/pages/post";
-import RegisterDesktop from "../../desktop/pages/Register";
-import GateDesktop from "../../desktop/pages/Gate";
+// import FeedDesktop from "../../desktop/pages/feed";
+// import DiscoverDesktop from "../../desktop/pages/discover";
+// import PostDesktop from "../../desktop/pages/post";
+// import RegisterDesktop from "../../desktop/pages/Register";
+// import GateDesktop from "../../desktop/pages/Gate";
 
 // Mobile pages
 import LoginMobile from "../../mobile/pages/LoginMobile";
@@ -173,7 +173,7 @@ export default function AppRoutes() {
     return (
       <Routes>
         <Route path="/" element={<LoginDesktop />} />
-        <Route
+        {/* <Route
           path="/feed"
           element={
             <ProtectedRoute>
@@ -212,7 +212,7 @@ export default function AppRoutes() {
               <GateDesktop />
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route path="*" element={<div className="p-8 text-white">Not Found</div>} />
       </Routes>
     );
