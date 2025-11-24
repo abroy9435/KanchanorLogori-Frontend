@@ -515,7 +515,7 @@ export default function Register() {
       </div>
 
       {/* step content */}
-      <div className="px-5 pb-24">
+      <div className="px-5 pb-[10rem]">
         {/* header text by step */}
         <div className="text-[5rem] justify-center flex items-center font-semibold my-[2rem]" style={{ fontSize: "2rem" }}>
           {step === 0 && "Lets confirm your identity"}
@@ -530,7 +530,7 @@ export default function Register() {
         {/* STEP 0: identity (name/email + menu-card pickers) */}
         {step === 0 && (
           <div className="space-y-6">
-            <div>
+            {/* <div>
               <textarea 
               className="px-[1rem] pt-[1rem] w-[21rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.1rem] border-transparent items-cente focus:border-[#0D0002] focus:ring-0 focus:outline-none"
               placeholder="Name"
@@ -539,6 +539,9 @@ export default function Register() {
                 onChange={(e) => onChange("name", e.target.value)}
                 />
               
+            </div> */}
+            <div>
+              <div className="px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.1rem]">{displayName || "—"}</div>
             </div>
             <div>
               <div className="px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.1rem]">{email || "—"}</div>

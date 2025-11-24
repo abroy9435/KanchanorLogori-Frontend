@@ -130,6 +130,7 @@ export default function EditProfileMobile() {
         setBaseIds({ school_id: initSchool, programme_id: initProg, department_id: initDept });
 
         setGender((prof.gender as "male" | "female") ?? "");
+        setPreferredGender((prof as any).preferred_gender ?? "");
         setDateOfBirth((prof as any).dateOfBirth ?? "");
         setInterests(Array.isArray(prof.interests) ? prof.interests : []);
         setPersonality(prof.personality ?? "");
@@ -160,6 +161,9 @@ export default function EditProfileMobile() {
 
     if (gender && gender !== base.gender) body.gender = gender;
     if (dateOfBirth && dateOfBirth !== (base as any).dateOfBirth) body.dateOfBirth = dateOfBirth;
+
+    if (preferred_gender && preferred_gender !== (base as any).preferred_gender)
+    body.preferred_gender = preferred_gender;
 
     if (!arraysEqual(interests, Array.isArray(base.interests) ? base.interests : []))
       body.interests = interests;
