@@ -33,6 +33,8 @@ export default function PostMobile() {
 
   // ✅ NEW success animation state
   const [showSuccess, setShowSuccess] = useState(false);
+  const [uploadFailed, setUploadFailed] = useState(false);
+
 
   const onCropComplete = useCallback((_a: Area, px: Area) => {
     setCroppedAreaPixels(px);
@@ -95,45 +97,31 @@ export default function PostMobile() {
       push({ message: "Select an image", variant: "error" });
       return;
     }
-
+  
     try {
       setLoading(true);
-
+      setUploadFailed(false);
+  
       await uploadPost(finalFile, caption.trim());
-
+  
       push({ message: "Post uploaded", variant: "success" });
-      
-      // ✅ Show success pop
       setShowSuccess(true);
-
-      // ✅ Reset UI Preview
+  
       setFinalFile(null);
       setFinalPreview(null);
       setCaption("");
-
-      // ✅ After 2.5s → remove popup & navigate
-      setTimeout(() => {
-        setShowSuccess(false);
-      }, 2000);
-
-      // Show success popup for 2 seconds, THEN navigate
-      setTimeout(() => {
-        setShowSuccess(false);
-
-        if (finalFile && finalPreview && caption.trim() !== "") {
-          navigate("/feed", { replace: true });
-        } else {
-          navigate("/feed");
-        }
-      }, 2000);
-
+  
+      setTimeout(() => setShowSuccess(false), 2000);
+      setTimeout(() => navigate("/feed"), 2000);
     } catch (err) {
       console.error(err);
+      setUploadFailed(true);
       push({ message: "Upload failed", variant: "error" });
     } finally {
       setLoading(false);
     }
   }
+  
 
   return (
     <div
@@ -207,6 +195,11 @@ export default function PostMobile() {
             >
               {loading ? "Publishing..." : "Publish"}
             </button>
+            {uploadFailed && (
+            <div className="text-[#C73E1D] mt-[0.4rem] text-[0.9rem] mt-2">
+              Upload failed! Please retry
+            </div>
+            )}
           </>
         )}
       </div>

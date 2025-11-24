@@ -1,6 +1,6 @@
 //src/pages/DiscoverUserProfile.tsx
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { discoverGetUserByUid } from "../../shared/api";
@@ -147,6 +147,9 @@ export default function DiscoverUserProfile() {
   // avatar loading overlay
   const [imageLoading, setImageLoading] = useState(true);
 
+  const lastTapRef = useRef(0);
+  const tapTimeoutRef = useRef<any>(null);
+
   // posts
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
@@ -207,22 +210,25 @@ export default function DiscoverUserProfile() {
   }, [profile?.uid]);
 
   /* ---------------- Like Profile ---------------- */
-  const handleLike = async () => {
-    if (!profile) return;
-
+  const handleLike = async (): Promise<boolean> => {
+    if (!profile) return false;
+  
     try {
       setShowHeart(true);
       await setLike({ likes: [profile.uid] });
-
-      setProfile((prev) =>
+  
+      setProfile(prev =>
         prev ? { ...prev, has_liked: true } : prev
       );
-
+  
       setTimeout(() => setShowHeart(false), 1200);
+  
+      return true;   // ⭐ IMPORTANT
     } catch (e) {
       console.error("Error liking:", e);
+      return false;  // ⭐ IMPORTANT
     }
-  };
+  };  
 
   /* ---------------- Block / Unblock ---------------- */
   const handleBlock = async () => {
@@ -259,6 +265,25 @@ export default function DiscoverUserProfile() {
     }
   };
 
+  const handleDoubleTap = async () => {
+    const now = Date.now();
+  
+    if (now - lastTapRef.current < 250) {
+      if (!profile?.has_liked) {
+        setShowHeart(true);
+        setTimeout(() => setShowHeart(false), 1000);
+  
+        const success = await handleLike();
+  
+        if (success) {
+          setProfile(p => p ? { ...p, has_liked: true } : p);
+        }
+      }
+    }
+  
+    lastTapRef.current = now;
+  };
+  
   /* ---------------- Avatar Swap ---------------- */
   const onPostClick = (p: UserPost) => {
     if (!profile) return;
@@ -333,7 +358,10 @@ export default function DiscoverUserProfile() {
           className="relative w-full"
         >
           {/* ---------------- Sticky Top: Avatar Block ---------------- */}
-          <div className="sticky top-0 z-10">
+          <div 
+            className="sticky top-[0rem] z-10"
+            onTouchStart={handleDoubleTap}
+          >
             {/* Avatar */}
             <div className="relative w-full aspect-[0.8] overflow-hidden rounded-t-[1.25rem]">
               <button
@@ -394,49 +422,54 @@ export default function DiscoverUserProfile() {
           {/* ---------------- Body ---------------- */}
           <div className="bg-[#0D0002] px-[2rem] pb-[1.25rem]">
 
-            <p className="text-[0.95rem] text-white/70">
-              {calculateAge(profile.dateOfBirth)} {profile.gender},{" "}
-              {profile.personality}
-            </p>
-
-            <p className="text-[0.95rem] text-white/90 mt-[0.25rem]">
-              Looking for {lookingForText}
-            </p>
-
-            {/* Interests */}
-            <div className="mt-[0.6rem] flex flex-wrap">
-              {profile.interests.map((i) => (
-                <span
-                  key={i}
-                  className="px-[8px] py-[5px] mx-[3px] my-[3px] text-xs rounded-full bg-[#FF5069]"
-                >
-                  {i}
-                </span>
-              ))}
-            </div>
-
-            {/* About */}
-            <h3 className="mt-[0.8rem] text-[1.25rem] font-semibold">
-              About me
-            </h3>
-            <p className="mt-[0.4rem] text-gray-300 text-[0.95rem] leading-relaxed">
-              {profile.bio}
-            </p>
-
-            {/* Education */}
-            <div className="mt-[0.8rem]">
-              <p className="mt-[0.4rem] text-[#cccccc] text-[0.95rem]">
-                {profile.programme_name || "—"},{" "}
-                {profile.department_name || "—"}
+            <div 
+              className=""
+              onTouchStart={handleDoubleTap}
+            >
+              <p className="text-[0.95rem] text-white/70">
+                {calculateAge(profile.dateOfBirth)} {profile.gender},{" "}
+                {profile.personality}
               </p>
 
-              <p className="text-[#cccccc] text-[0.95rem]">
-                School of {profile.school_name}
-                {(() => {
-                  const y = extractJoinYear(profile.email);
-                  return y ? `, since ${y}` : "";
-                })()}
+              <p className="text-[0.95rem] text-white/90 mt-[0.25rem]">
+                Looking for {lookingForText}
               </p>
+
+              {/* Interests */}
+              <div className="mt-[0.6rem] flex flex-wrap">
+                {profile.interests.map((i) => (
+                  <span
+                    key={i}
+                    className="px-[8px] py-[5px] mx-[3px] my-[3px] text-xs rounded-full bg-[#FF5069]"
+                  >
+                    {i}
+                  </span>
+                ))}
+              </div>
+
+              {/* About */}
+              <h3 className="mt-[0.8rem] text-[1.25rem] font-semibold">
+                About me
+              </h3>
+              <p className="mt-[0.4rem] text-gray-300 text-[0.95rem] leading-relaxed">
+                {profile.bio}
+              </p>
+
+              {/* Education */}
+              <div className="mt-[0.8rem]">
+                <p className="mt-[0.4rem] text-[#cccccc] text-[0.95rem]">
+                  {profile.programme_name || "—"},{" "}
+                  {profile.department_name || "—"}
+                </p>
+
+                <p className="text-[#cccccc] text-[0.95rem]">
+                  School of {profile.school_name}
+                  {(() => {
+                    const y = extractJoinYear(profile.email);
+                    return y ? `, since ${y}` : "";
+                  })()}
+                </p>
+              </div>
             </div>
 
             {/* Posts */}
@@ -456,7 +489,7 @@ export default function DiscoverUserProfile() {
                 />
               </p>
             ) : posts.length === 0 ? (
-              <p className="mx-[0rem] min-h-screen flex justify-center text-white/60 mt-[0.5rem]">
+              <p className="mx-[0rem] flex justify-center text-white/60 mt-[0.5rem]">
                 No posts yet.
               </p>
             ) : (

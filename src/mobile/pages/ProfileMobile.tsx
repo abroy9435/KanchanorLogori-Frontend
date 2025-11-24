@@ -184,6 +184,7 @@ export default function UserProfileMobile() {
     useState<UserProfileOnReceive | null>(null);
   const [loading, setLoading] = useState(true);
 
+
   const [isCropOpen, setIsCropOpen] = useState(false);
   const [pickedUrl, setPickedUrl] = useState<string | null>(null);
   const [origFilename, setOrigFilename] = useState("avatar.jpg");
@@ -250,6 +251,16 @@ export default function UserProfileMobile() {
     return m ? Number("20" + m[1]) : null;
   }
 
+  async function safeGetMyProfile(retries = 3) {
+    try {
+      return await getMyProfile();
+    } catch (err) {
+      if (retries <= 0) throw err;
+      await new Promise(res => setTimeout(res, 500));
+      return safeGetMyProfile(retries - 1);
+    }
+  }
+  
   /* -------------------------------------------------------------------------- */
   /*                          OPEN CROPPER (UNCHANGED)                          */
   /* -------------------------------------------------------------------------- */
@@ -272,10 +283,10 @@ export default function UserProfileMobile() {
 
   const confirmCropAndUpload = async () => {
     if (!pickedUrl || !croppedAreaPixels) return;
-
+  
     setIsCropOpen(false);
     setAvatarUpdating(true);
-
+  
     try {
       const cropped = await getCroppedImageFile(
         pickedUrl,
@@ -288,37 +299,41 @@ export default function UserProfileMobile() {
         800,
         origFilename
       );
-
+  
       const compressed = await compressImage(cropped);
-
+  
       const resp = await uploadAvatar(compressed);
-      if (!resp?.avatar_url)
-        throw new Error("No avatar_url returned");
-
-      // Cache-bust ONLY avatar (correct behavior)
-      const newUrl =
-        toWorkerAvatarUrlClean(resp.avatar_url) + "?v=" + Date.now();
-
+      if (!resp?.avatar_url) throw new Error("No avatar_url returned");
+  
+      // 1️⃣ Stable worker URL
+      const stableUrl = toWorkerAvatarUrlClean(resp.avatar_url);
+  
+      // 2️⃣ Add CACHE-BUST only ONCE
+      const cacheBusted = stableUrl + "?cb=" + Date.now();
+  
       setImageLoading(true);
+  
       setProfile((p) =>
         p
           ? {
               ...p,
-              avataar: newUrl,
+              avataar: cacheBusted,
             }
           : p
       );
-
+  
       push({ message: "Profile updated!", variant: "success" });
     } catch (err) {
       console.error(err);
       push({ message: "Avatar upload failed", variant: "error" });
+    } finally {
       setAvatarUpdating(false);
+  
+      if (pickedUrl) URL.revokeObjectURL(pickedUrl);
+      setPickedUrl(null);
     }
-
-    if (pickedUrl) URL.revokeObjectURL(pickedUrl);
-    setPickedUrl(null);
   };
+  
 
   /* -------------------------------------------------------------------------- */
   /*                              LOAD PROFILE                                  */
@@ -327,11 +342,11 @@ export default function UserProfileMobile() {
   useEffect(() => {
     (async () => {
       try {
-        const data: any = await getMyProfile();
+        const data: any = await safeGetMyProfile(); 
         const raw = data.avataar || data.avatar_url || data.avatar;
 
         // Stable avatar (NO ?v=Date.now() here)
-        const stable = toWorkerAvatarUrlClean(raw);
+        const stable = toWorkerAvatarUrlClean(raw) + "?cb=" + Date.now();
 
         setProfile({ ...data, avataar: stable });
         setImageLoading(true);
@@ -532,8 +547,8 @@ export default function UserProfileMobile() {
 
           {/* Avatar Image (fixed, guaranteed load event) */}
           <img
-            key={profile.avataar}                                 // <-- forces a new <img> on each avatar change
-            src={profile.avataar + `?cb=${Date.now()}`}           // <-- unique each time so onLoad ALWAYS fires
+                                           // <-- forces a new <img> on each avatar change
+            src={profile.avataar }        
             className={`absolute inset-[0rem] w-full h-full object-cover transition-opacity duration-300 ${
               imageLoading || avatarUpdating ? "opacity-0" : "opacity-100"
             }`}

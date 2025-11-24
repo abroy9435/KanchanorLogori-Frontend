@@ -85,6 +85,7 @@ function EmailLoginOverlay({
   onSubmit,
   onSwitchToSignup,
   onForgotPassword,
+  tempCreateDisable,
   submitting,
 }: {
   email: string;
@@ -94,6 +95,7 @@ function EmailLoginOverlay({
   onClose: () => void;
   onSubmit: () => void;
   onSwitchToSignup: () => void;
+  tempCreateDisable: () => void;
   onForgotPassword: () => void;
   submitting: boolean;
 }) {
@@ -134,7 +136,7 @@ function EmailLoginOverlay({
         >
           Cancel
         </button>
-        <div className=" justify-between items-center mt-2">
+        <div className=" flex justify-between items-center mt-2">
           <button
             onClick={onForgotPassword}
             className="text-[#FF5069] bg-transparent my-[0.3rem] text-sm underline"
@@ -142,12 +144,12 @@ function EmailLoginOverlay({
             Forgot password?
           </button>
 
-          {/* <button
-            onClick={onSwitchToSignup}
+          <button
+            onClick={tempCreateDisable}
             className="text-[#FF5069] bg-transparent my-[0.3rem] underline"
           >
             Create account
-          </button> */}
+          </button>
         </div>
       </div>
     </div>
@@ -385,7 +387,7 @@ export default function Login() {
         error?.code === "auth/popup-blocked"
       ) {
         setShowOverlay(
-          "Popup was blocked. Please allow pop-ups for this site or try login/signup with Email"
+          "Popup was blocked. Please allow pop-ups for this site to Login via Google"
         );
       } else if (msg === "WRONG_EMAIL_GOOGLE") {
         setWrongEmail(true);
@@ -631,6 +633,9 @@ const handleSignup = async () => {
           onForgotPassword={() => {
             setShowEmailOverlay(false);
             setShowForgotOverlay(true);
+          }}
+          tempCreateDisable={()=>{
+            setShowOverlay("Create Account via Email is temporarily disabled on all devices. Please switch to Google Login.");
           }}
           submitting={loadingEmailLogin}
         />
