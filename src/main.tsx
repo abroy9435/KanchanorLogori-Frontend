@@ -1,35 +1,3 @@
-// // src/main.tsx
-// import React from "react";
-// import ReactDOM from "react-dom/client";
-// import { BrowserRouter } from "react-router-dom";
-// import { AuthProvider } from "./shared/context/AuthContext";
-// import App from "./App"; // ✅ use App.tsx (handles desktop vs mobile)
-// import "./index.css";
-// import { ToastProvider } from "./shared/components/Toast";
-// // import { RemoveScrollBar } from 'react-remove-scroll-bar';
-
-// import ErrorBoundary from "./shared/ErrorBoundary";
-// import AppRoutes from "./shared/routes/AppRoutes";
-// if ("serviceWorker" in navigator) {
-//   window.addEventListener("load", () => {
-//     // vite-plugin-pwa will generate /sw.js — this registers it
-//     navigator.serviceWorker.register("/sw.js").catch(console.error);
-//   });
-// }
-
-// ReactDOM.createRoot(document.getElementById("root")!).render(
-//   <React.StrictMode>
-//     <ToastProvider>
-//       <ErrorBoundary>
-//         <AuthProvider>
-//           <BrowserRouter>
-//             <AppRoutes />
-//           </BrowserRouter>
-//         </AuthProvider>
-//       </ErrorBoundary>
-//     </ToastProvider>
-//   </React.StrictMode>
-// );
 
 
 
@@ -57,7 +25,7 @@ if ('serviceWorker' in navigator) {
       if ('Notification' in window && Notification.permission === 'granted') {
         const { initPush } = await import('./shared/utils/push');
         const token = await initPush();
-        if (token) console.log('[FCM] token:', token);
+        // if (token) console.log('[FCM] token:', token);
       }
     })
     .catch((err) => console.error('SW registration failed:', err));

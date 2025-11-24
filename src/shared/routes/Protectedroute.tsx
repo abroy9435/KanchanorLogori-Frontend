@@ -18,9 +18,10 @@ export default function ProtectedRoute({ children }: Props) {
   }
 
   // If not logged in → redirect to login
-  if (!user) {
+  if (user && !user.emailVerified) {
     return <Navigate to="/" replace />;
   }
+  
 
   // Authenticated → render the page
   return <>{children}</>;

@@ -33,7 +33,7 @@ export default function Login() {
       });
 
       const result = await signInWithPopup(auth, provider);
-      console.log("User:", result.user);
+      // console.log("User:", result.user);
 
       // redirect after login
       window.location.href = "/gate";

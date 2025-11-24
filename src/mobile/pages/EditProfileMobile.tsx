@@ -181,7 +181,7 @@ export default function EditProfileMobile() {
 
   const canSubmit = useMemo(() => {
     const changes = buildChanges();
-    console.log(changes)
+    // console.log(changes)
     return Object.keys(changes).length > 0 && !saving;
   }, [gender, dateOfBirth, interests, personality, lookingFor, bio, schoolId, programmeId, departmentId, saving, base, baseIds]);
 

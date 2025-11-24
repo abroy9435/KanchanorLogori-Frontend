@@ -166,7 +166,6 @@ export default function AppRoutes() {
   const { isMobile } = useDevice();
   const { user } = useAuth();  // <-- this brings `user` into scope
 
-  console.log("AppRoutes rendered, isMobile=", isMobile, "user=", user);
 
   // Desktop routes
   if (!isMobile) {
@@ -225,7 +224,11 @@ return (
     {/* Login stays outside layout */}
     <Route
       path="/"
-      element={user ? <Navigate to="/gate" replace /> : <LoginMobile />}
+      element={
+        user && user.emailVerified
+          ? <Navigate to="/gate" replace />
+          : <LoginMobile />
+      }
     />
 
     {/*Chatroom Staysoutside mobilelayout*/}

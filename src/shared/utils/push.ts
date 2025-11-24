@@ -33,7 +33,7 @@ export async function initPush(): Promise<string | null> {
 
   // Foreground messages
   onMessage(messaging, (payload: MessagePayload) => {
-    console.log("[FCM] foreground message:", payload);
+    // console.log("[FCM] foreground message:", payload);
     // TODO: show a toast or badge if you want
   });
 

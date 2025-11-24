@@ -187,7 +187,13 @@ export default function Register() {
   const [step, setStep] = useState<number>(0);
 
   // prefill name/email from Firebase (read-only on first page)
-  const displayName = auth.currentUser?.displayName ?? "";
+  const user = auth.currentUser;
+  let displayName = user?.displayName;
+
+  if (!displayName && user?.email) {
+    displayName = user.email.split("@")[0]; // fallback if email signup
+  }
+
   const email = auth.currentUser?.email ?? "";
 
   const [schools, setSchools] = useState<OptionItem[]>([]);
@@ -408,7 +414,7 @@ export default function Register() {
         looking_for: looking_for ?? 0,   // <= FIX
       };
   
-      console.log("REG PAYLOAD:", payload);
+      // console.log("REG PAYLOAD:", payload);
   
       await registerUser(payload);
   
@@ -532,6 +538,7 @@ export default function Register() {
                 maxLength={20}
                 onChange={(e) => onChange("name", e.target.value)}
                 />
+              
             </div>
             <div>
               <div className="px-[1rem] py-[1rem] mx-[0.7rem] mb-[1rem] rounded-[0.3rem] bg-[#0D0002] text-[1.1rem]">{email || "—"}</div>

@@ -6,7 +6,6 @@ import type { UserProfileOnReceive, UserProfileOnSend } from "../types";
 export async function getMyProfile() {
     try {
         const res = await api.get<UserProfileOnReceive>("/user/profile");
-        console.log("PROFILE SUCCESS:", res);
         return res.data;
     } 
     catch (err: any) {
