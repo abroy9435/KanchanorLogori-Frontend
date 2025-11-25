@@ -596,9 +596,12 @@ export default function UserProfileMobile() {
         </p>
 
         {/* --- LOOKING FOR: placed directly under the age row to match screenshot --- */}
-          <p className="text-[0.95rem] text-white/90 mt-[0.25rem] ml-[1rem]">
+        {lookingForText !== "I’m not sure" && (
+          <p className="text-[0.95rem] text-white/90 mt-[0.25rem]">
             Looking for {lookingForText}
           </p>
+        )}
+
 
         {/* Interests */}
         <div className="mt-[0.6rem] flex mx-[1rem] flex-wrap">

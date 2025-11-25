@@ -431,9 +431,12 @@ export default function DiscoverUserProfile() {
                 {profile.personality}
               </p>
 
-              <p className="text-[0.95rem] text-white/90 mt-[0.25rem]">
-                Looking for {lookingForText}
-              </p>
+              {lookingForText !== "I’m not sure" && (
+                <p className="text-[0.95rem] text-white/90 mt-[0.25rem]">
+                  Looking for {lookingForText}
+                </p>
+              )}
+
 
               {/* Interests */}
               <div className="mt-[0.6rem] flex flex-wrap">

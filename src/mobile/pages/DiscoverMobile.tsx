@@ -550,7 +550,7 @@ export default function DiscoverMobile() {
                     <button
                       className="bg-transparent"
                       onClick={() => {
-                        console.log("TODO: Post liking is under development");
+                        // console.log("TODO: Post liking is under development");
                       }}
                     >
                       <PostLikeButton />
