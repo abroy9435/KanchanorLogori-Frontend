@@ -332,7 +332,8 @@ export default function Login() {
     // ❌ Block iOS modes where popup ALWAYS fails
     if (isIOS() && (isInStandaloneMode() || isWebView() || isPrivateSafari())) {
       setShowOverlay(
-        "Google Login is blocked in this iOS. Please use Email to login/signup"
+        // "Google Login is blocked in this iOS. Please use Email to login/signup"
+        "Pop-up Blocked! Allow pop-ups on this device to login via Google"
       );
       setLoadingGoogle(false);
       return;
