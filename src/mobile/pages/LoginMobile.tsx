@@ -293,6 +293,11 @@ function decodeJwtPayload(idToken: string): any {
   return JSON.parse(json);
 }
 
+function isIOSRestricted() {
+  return isIOS() && (isInStandaloneMode() || isWebView() || isPrivateSafari());
+}
+
+
 const isTezuEmail = (email?: string | null) =>
   !!email && /^[^@\s]+@tezu\.ac\.in$/i.test(email.trim());
 

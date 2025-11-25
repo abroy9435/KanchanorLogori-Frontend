@@ -23,22 +23,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       try {
-        const forcedVersion = localStorage.getItem("forceLogoutVersion");
-  
-        // 🚨 Force logout once for ALL existing logged-in accounts
-        // if (u && forcedVersion !== FORCE_LOGOUT_VERSION) {
-        //   console.warn("Force logout triggered due to version mismatch.");
-        //   localStorage.setItem("forceLogoutVersion", FORCE_LOGOUT_VERSION);
-        //   await signOut(auth);
-          
-        //   setUser(null);
-        //   return; // Don't continue to normal logic
-        // }
-  
         // --- Normal Auth Logic ---
         if (u) {
           const email = u.email ?? "";
   
+          // --- iOS FIX: Google returns null/empty email for 300–800ms ---
+          // Avoid force logout until email is actually available.
+          if (!email) {
+            setUser(u);
+            return; // wait for next onAuthStateChanged tick
+          }
+  
+          // --- Domain Check ---
           if (!isTezuEmail(email)) {
             await signOut(auth);
             setUser(null);
@@ -58,7 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setUser(null);
         }
-  
       } finally {
         setLoading(false);
       }
@@ -66,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
     return () => unsub();
   }, [push]);
+  
 
   if (loading) {
     return<AuthLoading/>;
