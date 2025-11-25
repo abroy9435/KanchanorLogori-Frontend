@@ -18,7 +18,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { push } = useToast();
-  const FORCE_LOGOUT_VERSION = "1.0.0.0";
+  // const FORCE_LOGOUT_VERSION = "1.0.0.0";
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -26,14 +26,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const forcedVersion = localStorage.getItem("forceLogoutVersion");
   
         // 🚨 Force logout once for ALL existing logged-in accounts
-        if (u && forcedVersion !== FORCE_LOGOUT_VERSION) {
-          console.warn("Force logout triggered due to version mismatch.");
-          localStorage.setItem("forceLogoutVersion", FORCE_LOGOUT_VERSION);
-          await signOut(auth);
+        // if (u && forcedVersion !== FORCE_LOGOUT_VERSION) {
+        //   console.warn("Force logout triggered due to version mismatch.");
+        //   localStorage.setItem("forceLogoutVersion", FORCE_LOGOUT_VERSION);
+        //   await signOut(auth);
           
-          setUser(null);
-          return; // Don't continue to normal logic
-        }
+        //   setUser(null);
+        //   return; // Don't continue to normal logic
+        // }
   
         // --- Normal Auth Logic ---
         if (u) {
