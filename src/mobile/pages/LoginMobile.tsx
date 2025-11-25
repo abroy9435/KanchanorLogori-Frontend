@@ -346,9 +346,9 @@ export default function Login() {
 
     try {
       // ensure a fresh picker
-      try {
-        await signOut(auth);
-      } catch {}
+      // try {
+      //   await signOut(auth);
+      // } catch {}
 
       // 🔒 Force popup mode only (no redirect fallback)
       await setPersistence(auth, browserLocalPersistence);
